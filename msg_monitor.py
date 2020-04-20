@@ -35,7 +35,7 @@ while True:
                     if isinstance(msg, praw.models.Comment):
                         text = msg.body.lower()
                         try:
-                            if text.index("expired") > -1:
+                            if text.index(Config.expired_trigger.lower()) > -1:
                                 expired = True
                         except ValueError:
                             pass

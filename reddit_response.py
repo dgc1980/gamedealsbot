@@ -32,7 +32,7 @@ def logID(postid):
 def respond(submission):
     footer = """
 
-If this deal has expired, you can reply to this comment with `expired` to have it marked as such.
+If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to have it marked as such.
 
 *****
 
