@@ -1,8 +1,9 @@
-mport time
+import time
 import praw
 import prawcore
 import requests
 import Config
+import logging
 import re
 from bs4 import BeautifulSoup
 reddit = praw.Reddit(client_id=Config.cid,
@@ -11,6 +12,19 @@ reddit = praw.Reddit(client_id=Config.cid,
                      user_agent=Config.agent,
                      username=Config.user)
 subreddit = reddit.subreddit(Config.subreddit)
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M',
+                    filename='reddit_response.log',
+                    filemode='w')
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
+
 
 class Error(Exception):
     """Base class"""
@@ -47,7 +61,7 @@ If this deal has expired, you can reply to this comment with `"""+Config.expired
     if submission.is_self:
         urls = re.findall('(?:(?:https?):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', submission.selftext)
         if len(urls) == 0:
-            print("NO LINK FOUND skipping: " + submission.title)
+            logging.info("NO LINK FOUND skipping: " + submission.title)
             logID(submission.id)
             return
     # remove duplicate URLs
@@ -154,13 +168,13 @@ Charity links:
       comment = submission.reply(footer)
     comment.mod.distinguish(sticky=True)
 
-    print("Replied to: " + submission.title + "   Reason: " + reply_reason)
+    logging.info("Replied to: " + submission.title + "   Reason: " + reply_reason)
     logID(submission.id)
     return
 
 while True:
     try:
-        print("Initializing bot...")
+        logging.info("Initializing bot...")
         for submission in subreddit.stream.submissions():
             if submission.created < int(time.time()) - 86400:
                 continue
@@ -178,9 +192,9 @@ while True:
                     respond(submission)
                     continue
     except (prawcore.exceptions.RequestException, prawcore.exceptions.ResponseException):
-        print ("Error connecting to reddit servers. Retrying in 5 minutes...")
+        logging.info("Error connecting to reddit servers. Retrying in 5 minutes...")
         time.sleep(300)
 
     except praw.exceptions.APIException:
-        print ("Rate limited, waiting 5 seconds")
+        logging.info("Rate limited, waiting 5 seconds")
         time.sleep(5)
