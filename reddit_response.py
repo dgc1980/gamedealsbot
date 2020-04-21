@@ -1,4 +1,4 @@
-import time
+mport time
 import praw
 import prawcore
 import requests
@@ -144,7 +144,7 @@ Charity links:
       reply_text = """
 Charity links:
 
-* [Centre Point](http://www.amazon.co.uk/b?node={{match-url-2}}&tag=centrepoint01-21)""""
+* [Centre Point](http://www.amazon.co.uk/b?node={{match-url-2}}&tag=centrepoint01-21)"""
 
 
 
