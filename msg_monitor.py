@@ -13,11 +13,13 @@ reddit = praw.Reddit(client_id=Config.cid,
                      user_agent=Config.agent,
                      username=Config.user)
 
+apppath='/home/reddit/gamedealsbot/'
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M',
-                    filename='msg_monitor.log',
-                    filemode='w')
+                    filename=apppath+'msg_monitor.log',
+                    filemode='a')
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)

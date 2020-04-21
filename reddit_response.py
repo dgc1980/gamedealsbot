@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import time
 import praw
 import prawcore
@@ -13,11 +15,13 @@ reddit = praw.Reddit(client_id=Config.cid,
                      username=Config.user)
 subreddit = reddit.subreddit(Config.subreddit)
 
+apppath='/home/reddit/gamedealsbot/'
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M',
-                    filename='reddit_response.log',
-                    filemode='w')
+                    filename=apppath+'reddit_response.log',
+                    filemode='a')
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
@@ -35,11 +39,11 @@ class LinkError(Error):
     pass
 
 # make an empty file for first run
-f = open("postids.txt","a+")
+f = open(apppath+"postids.txt","a+")
 f.close()
 
 def logID(postid):
-    f = open("postids.txt","a+")
+    f = open(apppath+"postids.txt","a+")
     f.write(postid + "\n")
     f.close()
 
@@ -179,7 +183,7 @@ while True:
             if submission.created < int(time.time()) - 86400:
                 continue
             if submission.title[0:1].lower() == "[" or submission.title[0:1].lower() == "[":
-                if submission.id in open('postids.txt').read():
+                if submission.id in open(apppath+'postids.txt').read():
                     continue
                 for top_level_comment in submission.comments:
                     try:
