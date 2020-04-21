@@ -1,0 +1,7 @@
+cid = 'xxx'
+secret = 'xxx'
+agent = 'python:(name):(version) (by (author))'
+user = 'xxx'
+password = 'xxx'
+subreddit = 'xxx'
+expired_trigger = 'deal expired'
