@@ -1,0 +1,17 @@
+[Unit]
+Description=Python daemon
+After=syslog.target
+After=network.target
+
+[Service]
+Restart=always
+Type=simple
+User=reddit
+Group=reddit
+ExecStart=/usr/bin/python3 /home/reddit/gamedealsbot/reddit_response.py
+
+# Give the script some time to startup
+TimeoutSec=60
+
+[Install]
+WantedBy=multi-user.target
