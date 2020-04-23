@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import sqlite3
 import time
 import praw
 import prawcore
@@ -29,6 +30,7 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
+con = sqlite3.connect('gamedealsbot.db')
 
 class Error(Exception):
     """Base class"""
@@ -39,11 +41,11 @@ class LinkError(Error):
     pass
 
 # make an empty file for first run
-f = open(apppath+"postids.txt","a+")
+f = open(apppath+"postids2.txt","a+")
 f.close()
 
 def logID(postid):
-    f = open(apppath+"postids.txt","a+")
+    f = open(apppath+"postids2.txt","a+")
     f.write(postid + "\n")
     f.close()
 
@@ -183,8 +185,63 @@ while True:
             if submission.created < int(time.time()) - 86400:
                 continue
             if submission.title[0:1].lower() == "[" or submission.title[0:1].lower() == "[":
-                if submission.id in open(apppath+'postids.txt').read():
+                if submission.id in open(apppath+'postids2.txt').read():
                     continue
+                #logging.info("Week: "+time.strftime('%Y%W'))
+                #logging.info("Day: "+time.strftime('%Y%m%d'))
+                #logging.info("User: "+submission.author.name)
+
+                donotprocess=False
+### Weekly Post Limit
+                if Config.WeeklyPostLimit > 0:
+                  currentweek = time.strftime('%Y%W')
+                  cursorObj = con.cursor()
+                  cursorObj.execute('SELECT * FROM weeklyposts WHERE username = "'+submission.author.name+'" AND currentweek = '+currentweek)
+                  rows = cursorObj.fetchall()
+                  if len(rows) is 0:
+                    cursorObj.execute('INSERT INTO weeklyposts(username, postcount, currentweek) VALUES("'+submission.author.name+'",1,'+currentweek+')')
+                    con.commit()
+                  else:
+                    curcount = rows[0][2]
+                    if int(curcount) > int(Config.WeeklyPostLimit):
+                      donotprocess=True
+                      logging.info(submission.author.name+' is over their weekly post limit')
+                      submission.mod.remove()
+                      comment = submission.reply("Thank you for your submission, but you have reached your weekly post limit\n\n^^^^^\n\nYou may contact the modderators if you feel you are being picked on")
+                      comment.mod.distinguish(sticky=True)
+                    else:
+                      curcount=curcount+1
+                      cursorObj.execute("UPDATE weeklyposts SET postcount = " + str(curcount) + ' WHERE id = ' + str(rows[0][0]))
+                      con.commit()
+###
+
+
+### Daily Post Limit
+                if Config.DailyPostLimit > 0:
+                  currentday = time.strftime('%Y%m%d')
+                  cursorObj = con.cursor()
+                  cursorObj.execute('SELECT * FROM dailyposts WHERE username = "'+submission.author.name+'" AND currentday = '+currentday)
+                  rows = cursorObj.fetchall()
+                  if len(rows) is 0:
+                    cursorObj.execute('INSERT INTO dailyposts(username, postcount, currentday) VALUES("'+submission.author.name+'",1,'+currentday+')')
+                    con.commit()
+                  else:
+                    curcount = rows[0][2]
+                    if int(curcount) > int(Config.DailyPostLimit):
+                      donotprocess=True
+                      logging.info(submission.author.name+' is over their daily post limit')
+                      submission.mod.remove()
+                      comment = submission.reply("Thank you for your submission, but you have reached your daily post limit\n\n^^^^^\n\nYou may contact the modderators if you feel you are being picked on")
+                      comment.mod.distinguish(sticky=True)
+                    else:
+                      curcount=curcount+1
+                      cursorObj.execute("UPDATE dailyposts SET postcount = " + str(curcount) + ' WHERE id = ' + str(rows[0][0]))
+                      con.commit()
+###
+
+
+
+
                 for top_level_comment in submission.comments:
                     try:
                         if top_level_comment.author and top_level_comment.author.name == Config.user:
@@ -193,8 +250,9 @@ while True:
                     except AttributeError:
                         pass
                 else: # no break before, so no comment from GPDBot
-                    respond(submission)
-                    continue
+                    if not donotprocess:
+                      respond(submission)
+                      continue
     except (prawcore.exceptions.RequestException, prawcore.exceptions.ResponseException):
         logging.info("Error connecting to reddit servers. Retrying in 5 minutes...")
         time.sleep(300)

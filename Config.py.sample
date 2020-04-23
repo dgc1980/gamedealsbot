@@ -5,3 +5,6 @@ user = 'xxx'
 password = 'xxx'
 subreddit = 'xxx'
 expired_trigger = 'deal expired'
+DailyPostLimit = 0 # anything higher than 0 will enable it
+WeeklyPostLimit = 0 # anything higher than 0 will enable it
+
