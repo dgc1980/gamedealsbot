@@ -30,7 +30,7 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
-con = sqlite3.connect('gamedealsbot.db')
+con = sqlite3.connect(apppath+'gamedealsbot.db')
 
 class Error(Exception):
     """Base class"""
