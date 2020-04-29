@@ -52,11 +52,12 @@ def logID(postid):
 def respond(submission):
     footer = """
 
-If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to have it marked as such.
+If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to automatically close it.
 
 *****
 
-^^^any ^^^abuse ^^^of ^^^this ^^^will ^^^result ^^^in ^^^being ^^^banned  
+^(Note: To prevent abuse, requests are logged publicly.  Intentional abuse will likely result in a ban.)
+
 ^^^I ^^^am ^^^a ^^^bot, ^^^if ^^^you ^^^have ^^^any ^^^questions ^^^or ^^^comments ^^^about ^^^this ^^^post, ^^^please [^^^message ^^^the ^^^moderators](https://www.reddit.com/message/compose?to=%2Fr%2FGameDeals)"""
 
     reply_reason = "Generic Post"
@@ -106,6 +107,14 @@ GOG.com sells games that are completely DRM-free. This means that there is nothi
 
 This message is posted automatically to inform new users about what this service provides in order to answer some commonly asked questions."""
 
+### Itch.io
+#    if re.search("itch.io", url) is not None:
+#      reply_reason = "Itch.io Info"
+#      reply_text = """
+#Games from EA Origin do not come with Steam keys, unless explicitly stated. Origin games will require the download and use of the Origin client. If you wish to add a game shortcut to your Steam library, you can do so by adding it as a *Non-Steam Game* from the *Games* menu of the Steam client.
+#
+#[More Information](http://www.origin.com/us/faq)"""
+#
 ### Origin
     if re.search("origin.com", url) is not None:
       reply_reason = "Origin Info"

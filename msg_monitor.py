@@ -1,3 +1,4 @@
+import sqlite3
 import time
 import praw
 import prawcore 
@@ -27,6 +28,7 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
+con = sqlite3.connect(apppath+'gamedealsbot.db')
 
 logging.info("Monitoring inbox...")
 while True:
@@ -41,7 +43,7 @@ while True:
                     for comment in msg.refresh().replies:
                         try:
                             if comment.author.name == Config.user:
-                                responded = 1
+                                responded = 0
                         except AttributeError:
                             responded = 0
                 logging.info("Message recieved")
@@ -53,6 +55,7 @@ while True:
                         text = msg.body.lower()
                         try:
                             if text.index(Config.expired_trigger.lower()) > -1:
+                                print("expired ok")
                                 expired = True
                         except ValueError:
                             pass
@@ -63,12 +66,23 @@ while True:
                             logging.info("unflairing... responded to: " + msg.author.name)
                             msg.reply("Flair removed.")
                         elif expired:
-                            msg.mark_read()
+                            print("expired")
                             title_url = msg.submission.url
-                            #msg.submission.mod.flair(text='Expired', css_class='expired')
-                            msg.submission.mod.spoiler()
-                            logging.info("flairing... responded to: " + msg.author.name)
-                            msg.reply("This deal has been marked expired as requested by "+msg.author.name)
+                            u = msg.author
+                            if int(u.created_utc) < int(time.time()) - (86400 * 14):
+                              cursorObj = con.cursor()
+                              if msg.submission.link_flair_text is not None:
+                                flairtime = str( int(time.time()))
+                                cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+msg.submission.id+'","'+msg.submission.link_flair_text+'",' + flairtime + ')')
+                                con.commit()
+                              msg.submission.mod.spoiler()
+                              msg.submission.mod.flair(text='Expired', css_class='expired')
+                              logging.info("flairing... responded to: " + msg.author.name)
+                              msg.reply("This deal has been marked expired as requested by "+msg.author.name)
+                              msg.report('expiry request')
+                            else:
+                              msg.report('Request expiration by new user')
+                            msg.mark_read()
             except AttributeError:
                 logging.info("error checking comment by: " + msg.author.name)
     except (prawcore.exceptions.RequestException, prawcore.exceptions.ResponseException):
