@@ -41,11 +41,11 @@ class LinkError(Error):
     pass
 
 # make an empty file for first run
-f = open(apppath+"postids2.txt","a+")
+f = open(apppath+"postids.txt","a+")
 f.close()
 
 def logID(postid):
-    f = open(apppath+"postids2.txt","a+")
+    f = open(apppath+"postids.txt","a+")
     f.write(postid + "\n")
     f.close()
 
@@ -185,7 +185,9 @@ while True:
             if submission.created < int(time.time()) - 86400:
                 continue
             if submission.title[0:1].lower() == "[" or submission.title[0:1].lower() == "[":
-                if submission.id in open(apppath+'postids2.txt').read():
+
+
+                if submission.id in open(apppath+'postids.txt').read():
                     continue
                 #logging.info("Week: "+time.strftime('%Y%W'))
                 #logging.info("Day: "+time.strftime('%Y%m%d'))
@@ -253,9 +255,11 @@ while True:
                     if not donotprocess:
                       respond(submission)
                       continue
+
+
     except (prawcore.exceptions.RequestException, prawcore.exceptions.ResponseException):
-        logging.info("Error connecting to reddit servers. Retrying in 5 minutes...")
-        time.sleep(300)
+        logging.info("Error connecting to reddit servers. Retrying in 1 minute...")
+        time.sleep(60)
 
     except praw.exceptions.APIException:
         logging.info("Rate limited, waiting 5 seconds")

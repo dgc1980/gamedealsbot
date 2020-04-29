@@ -72,8 +72,8 @@ while True:
             except AttributeError:
                 logging.info("error checking comment by: " + msg.author.name)
     except (prawcore.exceptions.RequestException, prawcore.exceptions.ResponseException):
-        logging.info ("Error connecting to reddit servers. Retrying in 5 minutes...")
-        time.sleep(300)
+        logging.info ("Error connecting to reddit servers. Retrying in 1 minute...")
+        time.sleep(60)
 
     except praw.exceptions.APIException:
         logging.info ("rate limited, wait 5 seconds")
