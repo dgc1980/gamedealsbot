@@ -37,19 +37,20 @@ while True:
   for submission in subreddit.new(limit=50):
     if submission.spoiler and submission.link_flair_text != "Expired":
       if submission.link_flair_text is not None:
-        flairtime = str( int(time.time()))
-        cursorObj = con.cursor()
-        cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+submission.id+'","'+submission.link_flair_text+'",' + flairtime + ')')
-        con.commit()
+        if submission.link_flair_text  != "Expired":
+          flairtime = str( int(time.time()))
+          cursorObj = con.cursor()
+          cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+submission.id+'","'+submission.link_flair_text+'",' + flairtime + ')')
+          con.commit()
       submission.mod.flair(text='Expired', css_class='expired')
       logging.info("flairing spoiled post of " + submission.title);
     if not submission.spoiler and submission.link_flair_text == "Expired":
-      submission.mod.flair(text='', css_class='')
+      submission.mod.flair(text='')
       logging.info("unflairing spoiled post of " + submission.title)
       cursorObj = con.cursor()
       cursorObj.execute('SELECT * FROM flairs WHERE postid = "'+submission.id+'"')
       rows = cursorObj.fetchall()
-      if len(rows) is not 0:
+      if len(rows) is not 0 and rows[0][2] != "Expired":
         cursorObj.execute('DELETE FROM flairs WHERE postid = "'+submission.id+'"')
         submission.mod.flair(text=rows[0][2], css_class='')
 

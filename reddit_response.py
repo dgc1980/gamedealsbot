@@ -52,7 +52,8 @@ def logID(postid):
 def respond(submission):
     footer = """
 
-If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to automatically close it.
+If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to automatically close it.  
+If this deal is already closed, you can open it again by replying with `"""+Config.restore_trigger+"""`
 
 *****
 
