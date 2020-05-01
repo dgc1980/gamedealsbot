@@ -141,19 +141,19 @@ This is a blind pre-purchase of the full bundle at a reduced price. The games wi
       reply_text = "IndieGala giveaways are usually located towards the bottom of the page.  You may need to dismiss a banner image or confirm a captcha to claim a key.\n"
 
 ### IndieGala freebies Explanation
-    if re.search("freebies.indiegala.com", url) is not None:
+    if re.search("freebies\.indiegala\.com", url) is not None:
       reply_reason = "IndieGala freebies"
       reply_text = "IndieGala freebies are usually DRM-free downloads.  In these cases no Steam key will be provided."
 
 ### Fireflower Games
-    if re.search("freebies.indiegala.com", url) is not None:
+    if re.search("fireflowergames\.com", url) is not None:
       reply_reason = "Fireflower Games"
       reply_text = """
 FireFlower Games sells games that are completely DRM-free. This means that there is nothing preventing or limiting you from installing and playing the game.
 
 **As such, games from FireFlower Games never come with Steam keys.**
 
-[More Information](http://www.fireflowergames.com/faq/)
+[More Information](https://fireflowergames.com/faq)
 
 This message is posted automatically to answer some commonly asked questions about what this service provides"""
 
