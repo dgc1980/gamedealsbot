@@ -163,10 +163,11 @@ This message is posted automatically to answer some commonly asked questions abo
       reply_text = """
 Charity links:
 
-* [Child's Play](http://smile.amazon.com/b?node={{match-url-2}}&tag=childsplaycha-20)
-* [Electronic Frontier Foundation](http://smile.amazon.com/b?node={{match-url-2}}&tag=electronicfro-20)
-* [Able Gamers](http://smile.amazon.com/b?node={{match-url-2}}&tag=ablegamers-20)
-* [Mercy Corps](http://smile.amazon.com/b?node={{match-url-2}}&tag=mercycorps-20)"""
+* [Child's Play](https://smile.amazon.com/b?node={{match-url-2}}&tag=childsplaycha-20)
+* [Electronic Frontier Foundation](https://smile.amazon.com/b?node={{match-url-2}}&tag=electronicfro-20)
+* [Able Gamers](https://smile.amazon.com/b?node={{match-url-2}}&tag=ablegamers-20)
+* [Mercy Corps](https://smile.amazon.com/b?node={{match-url-2}}&tag=mercycorps-20)
+"""
 
 ### Amazon UK Charities
     if re.search("(amazon\.co\.uk\/(.*\/)?dp|amazon\.co\.uk\/(.*\/)?gp\/product|amazon\.co\.uk\/(.*\/)?exec\/obidos\/ASIN|amzn\.co\.uk)\/(\w{10})", url) is not None or re.search("amazon\.co\.uk\/.*node=(\d+)", url) is not None:
@@ -174,12 +175,12 @@ Charity links:
       reply_text = """
 Charity links:
 
-* [Centre Point](http://www.amazon.co.uk/b?node={{match-url-2}}&tag=centrepoint01-21)"""
+* [Centre Point](https://www.amazon.co.uk/b?node={{match-url-2}}&tag=centrepoint01-21)"""
 
 
 
     if reply_text is not "":
-      comment = submission.reply(reply_text+"\n*****\n"+footer)
+      comment = submission.reply(reply_text+"\n\n*****\n\n"+footer)
     else:
       comment = submission.reply(footer)
     comment.mod.distinguish(sticky=True)

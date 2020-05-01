@@ -89,7 +89,7 @@ while True:
                               msg.submission.mod.spoiler()
                               msg.submission.mod.flair(text='Expired', css_class='expired')
                               logging.info("flairing... responded to: " + msg.author.name)
-                              msg.reply("This deal has been marked expired as requested by "+msg.author.name+"  \nif this is a mistake reply with ``deal available").mod.distinguish(how='yes')
+                              msg.reply("This deal has been marked expired as requested by "+msg.author.name+"  \nif this is a mistake reply with `"+Config.restore_trigger+"`").mod.distinguish(how='yes')
                               msg.report('expiry request')
                             else:
                               msg.report('Request expiration by new user')
