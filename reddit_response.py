@@ -53,13 +53,10 @@ def respond(submission):
     footer = """
 
 If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to automatically close it.  
-If this deal is already closed, you can open it again by replying with `"""+Config.restore_trigger+"""`
-
-*****
+If this deal is already closed, you can open it again by replying with `"""+Config.restore_trigger+"""`.
 
 ^(Note: To prevent abuse, requests are logged publicly.  Intentional abuse will likely result in a ban.)
-
-^^^I ^^^am ^^^a ^^^bot, ^^^if ^^^you ^^^have ^^^any ^^^questions ^^^or ^^^comments ^^^about ^^^this ^^^post, ^^^please [^^^message ^^^the ^^^moderators](https://www.reddit.com/message/compose?to=%2Fr%2FGameDeals)"""
+"""
 
     reply_reason = "Generic Post"
     reply_text = ""
