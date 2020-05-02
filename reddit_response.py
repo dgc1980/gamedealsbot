@@ -53,7 +53,7 @@ def respond(submission):
     footer = """
 
 If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to automatically close it.  
-If this deal is already closed, you can open it again by replying with `"""+Config.restore_trigger+"""`.
+If this deal has been mistakenly closed or has been restocked, you can open it again by replying with `"""+Config.restore_trigger+"""`.
 
 ^(Note: To prevent abuse, requests are logged publicly.  Intentional abuse will likely result in a ban.)
 """
@@ -155,24 +155,51 @@ FireFlower Games sells games that are completely DRM-free. This means that there
 This message is posted automatically to answer some commonly asked questions about what this service provides"""
 
 ### Amazon US Charities
-    if re.search("(amazon\.com\/(.*\/)?dp|amazon\.com\/(.*\/)?gp\/product|amazon\.com\/(.*\/)?exec\/obidos\/ASIN|amzn\.com)\/(\w{10})", url) is not None or re.search("amazon\.com\/.*node=(\d+)", url) is not None:
+    if re.search("(amazon\.com\/(.*\/)?dp|amazon\.com\/(.*\/)?gp\/product|amazon\.com\/(.*\/)?exec\/obidos\/ASIN|amzn\.com)\/(\w{10})", url) is not None:
+      match1 = re.search("(amazon\.com\/(.*\/)?dp|amazon\.com\/(.*\/)?gp\/product|amazon\.com\/(.*\/)?exec\/obidos\/ASIN|amzn\.com)\/(\w{10})", url)
+      amzn = match1.group(5)
       reply_reason = "Amazon US Charities"
       reply_text = """
 Charity links:
 
-* [Child's Play](https://smile.amazon.com/b?node={{match-url-2}}&tag=childsplaycha-20)
-* [Electronic Frontier Foundation](https://smile.amazon.com/b?node={{match-url-2}}&tag=electronicfro-20)
-* [Able Gamers](https://smile.amazon.com/b?node={{match-url-2}}&tag=ablegamers-20)
-* [Mercy Corps](https://smile.amazon.com/b?node={{match-url-2}}&tag=mercycorps-20)
-"""
+* [Child's Play](https://smile.amazon.com/dp/"""+amzn+"""&tag=childsplaycha-20)
+* [Electronic Frontier Foundation](https://smile.amazon.com/dp/"""+amzn+"""&tag=electronicfro-20)
+* [Able Gamers](https://smile.amazon.com/dp/"""+amzn+"""&tag=ablegamers-20)
+* [Mercy Corps](https://smile.amazon.com/dp/"""+amzn+"""&tag=mercycorps-20)"""
+
+### Amazon US Charities NODE
+    if re.search("amazon\.com\/.*node=(\d+)", url) is not None:
+      match1 = re.search("(amazon\.com\/(.*\/)?dp|amazon\.com\/(.*\/)?gp\/product|amazon\.com\/(.*\/)?exec\/obidos\/ASIN|amzn\.com)\/(\w{10})", url)
+      amzn = match1.group(1)
+      reply_reason = "Amazon US Charities"
+      reply_text = """
+Charity links:
+
+* [Child's Play](https://smile.amazon.com/b/?node="""+amzn+"""&tag=childsplaycha-20)
+* [Electronic Frontier Foundation](https://smile.amazon.com/b/?node="""+amzn+"""&tag=electronicfro-20)
+* [Able Gamers](https://smile.amazon.com/b/?node="""+amzn+"""&tag=ablegamers-20)
+* [Mercy Corps](https://smile.amazon.com/b/?node="""+amzn+"""&tag=mercycorps-20)"""
+
 
 ### Amazon UK Charities
-    if re.search("(amazon\.co\.uk\/(.*\/)?dp|amazon\.co\.uk\/(.*\/)?gp\/product|amazon\.co\.uk\/(.*\/)?exec\/obidos\/ASIN|amzn\.co\.uk)\/(\w{10})", url) is not None or re.search("amazon\.co\.uk\/.*node=(\d+)", url) is not None:
+    if re.search("(amazon\.co\.uk\/(.*\/)?dp|amazon\.co\.uk\/(.*\/)?gp\/product|amazon\.co\.uk\/(.*\/)?exec\/obidos\/ASIN|amzn\.co\.uk)\/(\w{10})", url) is not None:
+      match1 = re.search("(amazon\.co\.uk\/(.*\/)?dp|amazon\.co\.uk\/(.*\/)?gp\/product|amazon\.co\.uk\/(.*\/)?exec\/obidos\/ASIN|amzn\.co\.uk)\/(\w{10})", url)
+      amzn = match1.group(5)
       reply_reason = "Amazon UK Charities"
       reply_text = """
 Charity links:
 
-* [Centre Point](https://www.amazon.co.uk/b?node={{match-url-2}}&tag=centrepoint01-21)"""
+* [Centre Point](https://www.amazon.co.uk/dp/?node="""+amzn+"""&tag=centrepoint01-21)"""
+
+### Amazon UK Charities NODE
+    if re.search("amazon\.co\.uk\/.*node=(\d+)", url) is not None:
+      match1 = re.search("amazon\.co\.uk\/.*node=(\d+)", url)
+      amzn = match1.group(1)
+      reply_reason = "Amazon UK Charities"
+      reply_text = """
+Charity links:
+
+* [Centre Point](https://www.amazon.co.uk/dp/?node="""+amzn+"""&tag=centrepoint01-21)"""
 
 
 
