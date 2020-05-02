@@ -162,10 +162,10 @@ This message is posted automatically to answer some commonly asked questions abo
       reply_text = """
 Charity links:
 
-* [Child's Play](https://smile.amazon.com/dp/"""+amzn+"""&tag=childsplaycha-20)
-* [Electronic Frontier Foundation](https://smile.amazon.com/dp/"""+amzn+"""&tag=electronicfro-20)
-* [Able Gamers](https://smile.amazon.com/dp/"""+amzn+"""&tag=ablegamers-20)
-* [Mercy Corps](https://smile.amazon.com/dp/"""+amzn+"""&tag=mercycorps-20)"""
+* [Child's Play](https://smile.amazon.com/dp/"""+amzn+"""?tag=childsplaycha-20)
+* [Electronic Frontier Foundation](https://smile.amazon.com/dp/"""+amzn+"""?tag=electronicfro-20)
+* [Able Gamers](https://smile.amazon.com/dp/"""+amzn+"""?tag=ablegamers-20)
+* [Mercy Corps](https://smile.amazon.com/dp/"""+amzn+"""?tag=mercycorps-20)"""
 
 ### Amazon US Charities NODE
     if re.search("amazon\.com\/.*node=(\d+)", url) is not None:
@@ -189,7 +189,7 @@ Charity links:
       reply_text = """
 Charity links:
 
-* [Centre Point](https://www.amazon.co.uk/dp/?node="""+amzn+"""&tag=centrepoint01-21)"""
+* [Centre Point](https://www.amazon.co.uk/dp/"""+amzn+"""?tag=centrepoint01-21)"""
 
 ### Amazon UK Charities NODE
     if re.search("amazon\.co\.uk\/.*node=(\d+)", url) is not None:
