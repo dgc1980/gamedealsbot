@@ -74,12 +74,20 @@ while True:
                           if len(rows) is not 0 and rows[0][2] != "Expired":
                             cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
                             msg.submission.mod.flair(text=rows[0][2], css_class='')
-                          msg.reply("This deal has been marked available as requested by "+msg.author.name+"").mod.distinguish(how='yes')
+                          msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
                           msg.mark_read()
                         elif expired:
                             title_url = msg.submission.url
                             u = msg.author
-                            if int(u.created_utc) < int(time.time()) - (86400 * 14):
+                            if Config.UserKarmaType == "C":
+                              karma = reddit.redditor(u.name).comment_karma
+                            elif Config.UserKarmaType == "L":
+                              karma = reddit.redditor(u.name).link_karma
+                            elif Config.UserKarmaType == "T":
+                              karma = reddit.redditor(u.name).link_karma + reddit.redditor(u.name).comment_karma
+                            else:
+                              karma = 9999999
+                            if int(u.created_utc) < int(time.time()) - (86400 * Config.NewUserDays ) and karma >= Config.UserKarma:
                               cursorObj = con.cursor()
                               if msg.submission.link_flair_text is not None:
                                 if msg.submission.link_flair_text != "Expired":
@@ -90,7 +98,6 @@ while True:
                               msg.submission.mod.flair(text='Expired', css_class='expired')
                               logging.info("flairing... responded to: " + msg.author.name)
                               myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nif this is a mistake reply with `"+Config.restore_trigger+"`").mod.distinguish(how='yes')
-                              myreply.report('expiry request')
                             else:
                               msg.report('Request expiration by new user')
                             msg.mark_read()

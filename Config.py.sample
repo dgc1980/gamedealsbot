@@ -5,6 +5,9 @@ user = 'xxx'
 password = 'xxx'
 subreddit = 'xxx'
 expired_trigger = 'deal expired'
+restore_trigger = 'deal available'
 DailyPostLimit = 0 # anything higher than 0 will enable it
 WeeklyPostLimit = 0 # anything higher than 0 will enable it
-
+NewUserDays = 1 # minimum days account has been active to not trigger manual review
+UserKarmaType = 'C' # Karma Type, C = Comment, L = Link, T = Total
+UserKarma = 1 # minimum combined karma to not trigger manual review
