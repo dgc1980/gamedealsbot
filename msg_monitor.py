@@ -28,7 +28,7 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
-con = sqlite3.connect(apppath+'gamedealsbot.db')
+con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
 
 logging.info("Monitoring inbox...")
 while True:
@@ -72,18 +72,21 @@ while True:
                           cursorObj.execute('SELECT * FROM flairs WHERE postid = "'+msg.submission.id+'"')
                           rows = cursorObj.fetchall()
                           if len(rows) is not 0 and rows[0][2] != "Expired":
-                            cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
+                            try:
+                              cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
+                            except:
+                              a = 1
                             msg.submission.mod.flair(text=rows[0][2], css_class='')
                           msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
                           msg.mark_read()
                         elif expired:
                             title_url = msg.submission.url
                             u = msg.author
-                            if Config.UserKarmaType == "C":
+                            if Config.UserKarmaType == "comment":
                               karma = reddit.redditor(u.name).comment_karma
-                            elif Config.UserKarmaType == "L":
+                            elif Config.UserKarmaType == "link":
                               karma = reddit.redditor(u.name).link_karma
-                            elif Config.UserKarmaType == "T":
+                            elif Config.UserKarmaType == "combined":
                               karma = reddit.redditor(u.name).link_karma + reddit.redditor(u.name).comment_karma
                             else:
                               karma = 9999999
@@ -97,7 +100,7 @@ while True:
                               msg.submission.mod.spoiler()
                               msg.submission.mod.flair(text='Expired', css_class='expired')
                               logging.info("flairing... responded to: " + msg.author.name)
-                              myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nif this is a mistake reply with `"+Config.restore_trigger+"`").mod.distinguish(how='yes')
+                              myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
                             else:
                               msg.report('Request expiration by new user')
                             msg.mark_read()
