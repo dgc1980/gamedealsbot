@@ -71,6 +71,7 @@ while True:
                           cursorObj = con.cursor()
                           cursorObj.execute('SELECT * FROM flairs WHERE postid = "'+msg.submission.id+'"')
                           rows = cursorObj.fetchall()
+                          msg.mark_read()
                           if len(rows) is not 0 and rows[0][2] != "Expired":
                             try:
                               cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
@@ -78,7 +79,6 @@ while True:
                               a = 1
                             msg.submission.mod.flair(text=rows[0][2], css_class='')
                           msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
-                          msg.mark_read()
                         elif expired:
                             title_url = msg.submission.url
                             u = msg.author
