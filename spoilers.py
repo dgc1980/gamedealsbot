@@ -47,12 +47,19 @@ while True:
       pass
 
     if submission.spoiler and not isflair :
-      if submission.link_flair_text != "Expired" and flair != "":
+      if not isflair and flair != "":
         flairtime = str( int(time.time()))
         cursorObj = con.cursor()
-        cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+submission.id+'","'+submission.link_flair_text+'",' + flairtime + ')')
+        cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
+        #cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+submission.id+'","'+submission.link_flair_text+'",' + flairtime + ')')
         con.commit()
+
+      #if submission.mod.flair != "":
+      #  submission.mod.flair(text='Expired: ' + submission.mod.flair, css_class='expired')
+      #else
+      #  submission.mod.flair(text='Expired', css_class='expired')
       submission.mod.flair(text='Expired', css_class='expired')
+
       logging.info("flairing spoiled post of " + submission.title)
     elif not submission.spoiler and isflair:
       submission.mod.flair(text='')

@@ -95,14 +95,23 @@ while True:
                               if msg.submission.link_flair_text is not None:
                                 if msg.submission.link_flair_text != "Expired":
                                   flairtime = str( int(time.time()))
-                                  cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+msg.submission.id+'","'+msg.submission.link_flair_text+'",' + flairtime + ')')
+
+                                  cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (msg.submission.id,msg.submission.link_flair_text,flairtime ) )
                                   con.commit()
                               msg.submission.mod.spoiler()
+
+                              #if msg.submission.mod.flair != "":
+                              #  msg.submission.mod.flair(text='Expired: ' + msg.submission.mod.flair, css_class='expired')
+                              #else
+                              #  msg.submission.mod.flair(text='Expired', css_class='expired')
                               msg.submission.mod.flair(text='Expired', css_class='expired')
+
+
                               logging.info("flairing... responded to: " + msg.author.name)
                               myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
                             else:
                               msg.report('Request expiration by new user')
+                              logging.info("maybe abuse from user?: https://reddit.com/u/" + msg.author.name + " on post https://reddit.com/" + msg.submission.id )
                             msg.mark_read()
             except AttributeError:
                 raise
