@@ -4,6 +4,13 @@ import praw
 import prawcore 
 import requests
 import logging
+import datetime
+import os
+import re
+
+os.environ['TZ'] = 'UTC'
+
+
 import Config
 from bs4 import BeautifulSoup
 responded = 0
@@ -36,6 +43,7 @@ while True:
         for msg in reddit.inbox.stream():
             expired = False
             oops = False
+            setsched = False
             responded = 0
             # checks if bot has already replied (good if script has to restart)
             try:
@@ -53,6 +61,10 @@ while True:
                 if responded == 0:
                     if isinstance(msg, praw.models.Comment):
                         text = msg.body.lower()
+                        ismod = False
+                        if msg.author.name == "dgc1980":
+                          ismod = True
+
                         try:
                           if text.index(Config.expired_trigger.lower()) > -1:
                              expired = True
@@ -61,6 +73,12 @@ while True:
                         try:
                           if text.index(Config.restore_trigger.lower()) > -1:
                              oops = True
+                        except ValueError:
+                             pass
+                        try:
+                          if text.index(Config.expired_schedule.lower()) > -1:
+                           if msg.author.name == msg.submission.author.name or ismod:
+                             setsched = True
                         except ValueError:
                              pass
 
@@ -75,10 +93,23 @@ while True:
                           if len(rows) is not 0 and rows[0][2] != "Expired":
                             try:
                               cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
+                              con.commit()
                             except:
                               a = 1
                             msg.submission.mod.flair(text=rows[0][2], css_class='')
                           msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
+                        elif setsched:
+                          try:
+                            match1 = re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text)
+                            tm = time.mktime(datetime.datetime.strptime(match1.group(1), "%H:%M %d/%m/%Y").timetuple())
+                            cursorObj = con.cursor()
+                            cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm) )
+                            con.commit()
+                            logging.info("setting up schedule: " + msg.author.name)
+                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+" .").mod.distinguish(how='yes')
+                          except:
+                            a = 1
+                          msg.mark_read()
                         elif expired:
                             title_url = msg.submission.url
                             u = msg.author
@@ -90,6 +121,9 @@ while True:
                               karma = reddit.redditor(u.name).link_karma + reddit.redditor(u.name).comment_karma
                             else:
                               karma = 9999999
+
+
+
                             if int(u.created_utc) < int(time.time()) - (86400 * Config.NewUserDays ) and karma >= Config.UserKarma:
                               cursorObj = con.cursor()
                               if msg.submission.link_flair_text is not None:
@@ -110,6 +144,7 @@ while True:
                               logging.info("flairing... responded to: " + msg.author.name)
                               myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
                             else:
+
                               msg.report('Request expiration by new user')
                               logging.info("maybe abuse from user?: https://reddit.com/u/" + msg.author.name + " on post https://reddit.com/" + msg.submission.id )
                             msg.mark_read()
