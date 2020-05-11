@@ -62,7 +62,7 @@ while True:
                     if isinstance(msg, praw.models.Comment):
                         text = msg.body.lower()
                         ismod = False
-                        if msg.author.name == "dgc1980":
+                        if msg.author.name in ['dgc1980','SquareWheel','smeggysmeg','smeggysmeg','ronin19','treblah3','caninehere','caninehere','oxygENigma','wayward_wanderer']:
                           ismod = True
 
                         try:
