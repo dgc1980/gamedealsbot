@@ -43,9 +43,9 @@ logging.info("starting scheduler...")
 
 
 def runjob():
-  tm = time.time()
+  tm = str(int(time.time()))
   cursorObj = con.cursor()
-  cursorObj.execute('SELECT * FROM schedules WHERE schedtime < "''+tm+";')
+  cursorObj.execute('SELECT * FROM schedules WHERE schedtime <= ' + tm + ';')
   rows = cursorObj.fetchall()
   if len(rows) is not 0:
     logging.info("running schedule on https://reddit.com/" + rows[0][1])
@@ -57,9 +57,9 @@ def runjob():
 
 
 
-
 schedule.every(1).minutes.do(runjob)
 
+runjob()
 while 1:
     schedule.run_pending()
     time.sleep(1)
