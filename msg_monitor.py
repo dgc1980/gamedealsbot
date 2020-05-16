@@ -43,6 +43,10 @@ def checkuser(username):
   commenttime = 0
   currenttime = str(int(time.time()))
   u = reddit.redditor(username)
+  try:
+    test = u.karma
+  except:
+    return True
   if Config.UserKarmaType == "comment":
     karma = reddit.redditor(u.name).comment_karma
   elif Config.UserKarmaType == "link":
