@@ -53,8 +53,8 @@ def respond(submission):
     footer = """
 
 If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to automatically close it.  
-If this deal has been mistakenly closed or has been restocked, you can open it again by replying with `"""+Config.restore_trigger+"""`.
-
+If this deal has been mistakenly closed or has been restocked, you can open it again by replying with `"""+Config.restore_trigger+"""`.  
+[^(more information)](https://www.reddit.com/r/GameDeals/wiki/gamedealsbot)  
 ^(Note: To prevent abuse, requests are logged publicly.  Intentional abuse will likely result in a ban.)
 """
 

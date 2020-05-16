@@ -37,6 +37,42 @@ logging.getLogger('').addHandler(console)
 
 con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
 
+
+def checkuser(username):
+  commentcount = 0
+  commenttime = 0
+  currenttime = str(int(time.time()))
+  u = reddit.redditor(username)
+  if Config.UserKarmaType == "comment":
+    karma = reddit.redditor(u.name).comment_karma
+  elif Config.UserKarmaType == "link":
+    karma = reddit.redditor(u.name).link_karma
+  elif Config.UserKarmaType == "combined":
+    karma = reddit.redditor(u.name).link_karma + reddit.redditor(u.name).comment_karma
+  else:
+    karma = 9999999
+  if karma <= Config.UserKarma:
+    filter = True
+    return True
+  for comment in  reddit.redditor(username).comments.new(limit=10) :
+    commenttime += ( int(currenttime) - int(comment.created_utc) )
+    commentcount += 1
+    if comment.subreddit.display_name in Config.SuspectSubs:
+      return True
+  for submission in  reddit.redditor(username).submissions.new(limit=10) :
+    commenttime += ( int(currenttime) - int(submission.created_utc) )
+    commentcount += 1
+    if submission.subreddit.display_name in Config.SuspectSubs:
+      return True
+  commentdays = ( (commenttime / commentcount) / 86400 )
+  if commentdays >= Config.HistoryDays:
+    return True
+  return False
+
+
+
+
+
 logging.info("Monitoring inbox...")
 while True:
     try:
@@ -67,12 +103,14 @@ while True:
 
                         try:
                           if text.index(Config.expired_trigger.lower()) > -1:
-                             expired = True
+                             if not checkuser(msg.author.name):
+                               expired = True
                         except ValueError:
                              pass
                         try:
                           if text.index(Config.restore_trigger.lower()) > -1:
-                             oops = True
+                             if not checkuser(msg.author.name):
+                               oops = True
                         except ValueError:
                              pass
                         try:
@@ -95,7 +133,7 @@ while True:
                               cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
                               con.commit()
                             except:
-                              a = 1
+                              pass
                             msg.submission.mod.flair(text=rows[0][2], css_class='')
                           msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
                         elif setsched:
@@ -108,23 +146,11 @@ while True:
                             logging.info("setting up schedule: " + msg.author.name)
                             myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+" .").mod.distinguish(how='yes')
                           except:
-                            a = 1
+                            pass
                           msg.mark_read()
                         elif expired:
                             title_url = msg.submission.url
-                            u = msg.author
-                            if Config.UserKarmaType == "comment":
-                              karma = reddit.redditor(u.name).comment_karma
-                            elif Config.UserKarmaType == "link":
-                              karma = reddit.redditor(u.name).link_karma
-                            elif Config.UserKarmaType == "combined":
-                              karma = reddit.redditor(u.name).link_karma + reddit.redditor(u.name).comment_karma
-                            else:
-                              karma = 9999999
-
-
-
-                            if int(u.created_utc) < int(time.time()) - (86400 * Config.NewUserDays ) and karma >= Config.UserKarma:
+                            if int(u.created_utc) < int(time.time()) - (86400 * Config.NewUserDays ):
                               cursorObj = con.cursor()
                               if msg.submission.link_flair_text is not None:
                                 if msg.submission.link_flair_text != "Expired":
