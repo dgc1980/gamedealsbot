@@ -44,8 +44,10 @@ def checkuser(username):
   currenttime = str(int(time.time()))
   u = reddit.redditor(username)
   try:
-    test = u.karma
+    test = u.comment_karma
   except:
+    return True
+  if int(u.created_utc) < int(time.time()) - (86400 * Config.NewUserDays ):
     return True
   if Config.UserKarmaType == "comment":
     karma = reddit.redditor(u.name).comment_karma
@@ -61,16 +63,16 @@ def checkuser(username):
   for comment in  reddit.redditor(username).comments.new(limit=10) :
     commenttime += ( int(currenttime) - int(comment.created_utc) )
     commentcount += 1
-    if comment.subreddit.display_name in Config.SuspectSubs:
+    if comment.subreddit.display_name.lower() in Config.SuspectSubs:
       return True
-  for submission in  reddit.redditor(username).submissions.new(limit=10) :
-    commenttime += ( int(currenttime) - int(submission.created_utc) )
-    commentcount += 1
-    if submission.subreddit.display_name in Config.SuspectSubs:
-      return True
+  #for submission in  reddit.redditor(username).submissions.new(limit=10) :
+  #  commenttime += ( int(currenttime) - int(submission.created_utc) )
+  #  commentcount += 1
+  #  if submission.subreddit.display_name.lower() in Config.SuspectSubs:
+  #    return True
   commentdays = ( (commenttime / commentcount) / 86400 )
-  if commentdays >= Config.HistoryDays:
-    return True
+  #if commentdays >= Config.HistoryDays:
+  #  return True
   return False
 
 
@@ -101,19 +103,20 @@ while True:
                 if responded == 0:
                     if isinstance(msg, praw.models.Comment):
                         text = msg.body.lower()
+                        u = msg.author
                         ismod = False
                         if msg.author.name in ['dgc1980','SquareWheel','smeggysmeg','smeggysmeg','ronin19','treblah3','caninehere','caninehere','oxygENigma','wayward_wanderer']:
                           ismod = True
-
+                        usertest = checkuser(msg.author.name)
                         try:
                           if text.index(Config.expired_trigger.lower()) > -1:
-                             if not checkuser(msg.author.name):
+                             if not usertest:
                                expired = True
                         except ValueError:
                              pass
                         try:
                           if text.index(Config.restore_trigger.lower()) > -1:
-                             if not checkuser(msg.author.name):
+                             if not usertest:
                                oops = True
                         except ValueError:
                              pass
@@ -152,32 +155,34 @@ while True:
                           except:
                             pass
                           msg.mark_read()
-                        elif expired:
+                        elif expired and not usertest:
                             title_url = msg.submission.url
-                            if int(u.created_utc) < int(time.time()) - (86400 * Config.NewUserDays ):
-                              cursorObj = con.cursor()
-                              if msg.submission.link_flair_text is not None:
-                                if msg.submission.link_flair_text != "Expired":
-                                  flairtime = str( int(time.time()))
-
-                                  cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (msg.submission.id,msg.submission.link_flair_text,flairtime ) )
-                                  con.commit()
-                              msg.submission.mod.spoiler()
-
-                              #if msg.submission.mod.flair != "":
-                              #  msg.submission.mod.flair(text='Expired: ' + msg.submission.mod.flair, css_class='expired')
-                              #else
-                              #  msg.submission.mod.flair(text='Expired', css_class='expired')
-                              msg.submission.mod.flair(text='Expired', css_class='expired')
-
-
-                              logging.info("flairing... responded to: " + msg.author.name)
-                              myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
-                            else:
-
-                              msg.report('Request expiration by new user')
-                              logging.info("maybe abuse from user?: https://reddit.com/u/" + msg.author.name + " on post https://reddit.com/" + msg.submission.id )
+                            cursorObj = con.cursor()
+                            if msg.submission.link_flair_text is not None:
+                              if msg.submission.link_flair_text != "Expired":
+                                flairtime = str( int(time.time()))
+                                cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (msg.submission.id,msg.submission.link_flair_text,flairtime ) )
+                                con.commit()
+                            msg.submission.mod.spoiler()
+                            #if msg.submission.mod.flair != "":
+                            #  msg.submission.mod.flair(text='Expired: ' + msg.submission.mod.flair, css_class='expired')
+                            #else
+                            #  msg.submission.mod.flair(text='Expired', css_class='expired')
+                            msg.submission.mod.flair(text='Expired', css_class='expired')
+                            logging.info("flairing... responded to: " + msg.author.name)
+                            myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
                             msg.mark_read()
+                        elif expired and usertest:
+                          msg.report('possible bot abuse')
+                          logging.info("maybe abuse from user?: https://reddit.com/u/" + msg.author.name + " on post https://reddit.com/" + msg.submission.id )
+                          msg.mark_read()
+                        elif oops and usertest:
+                          msg.report('possible bot abuse')
+                          logging.info("maybe abuse from user?: https://reddit.com/u/" + msg.author.name + " on post https://reddit.com/" + msg.submission.id )
+                          msg.mark_read()
+                        elif usertest:
+                          msg.mark_read()
+
             except AttributeError:
                 raise
                 logging.info("error checking comment by: " + msg.author.name)

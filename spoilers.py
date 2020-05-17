@@ -6,6 +6,7 @@ import requests
 import logging
 import Config
 from bs4 import BeautifulSoup
+import schedule
 responded = 0
 footer = ""
 reddit = praw.Reddit(client_id=Config.cid,
@@ -29,12 +30,14 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
+logging.getLogger('schedule').propagate = False
+
 con = sqlite3.connect(apppath+'gamedealsbot.db')
 
 logging.info("scanning spoiler...")
 
-while True:
-  for submission in subreddit.new(limit=50):
+def runspoiler(postlimit):
+  for submission in subreddit.new(limit=postlimit):
     if submission.link_flair_text is not None:
       flair = submission.link_flair_text.lower()
     else:
@@ -70,4 +73,14 @@ while True:
       if len(rows) is not 0 and rows[0][2] != "Expired":
         cursorObj.execute('DELETE FROM flairs WHERE postid = "'+submission.id+'"')
         submission.mod.flair(text=rows[0][2], css_class='')
-  time.sleep(30)
+
+
+schedule.every(1).minutes.do(runspoiler, 50)
+schedule.every(1).hours.do(runspoiler, 200)
+
+runspoiler(200)
+
+while 1:
+    schedule.run_pending()
+    time.sleep(1)
+
