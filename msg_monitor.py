@@ -47,8 +47,9 @@ def checkuser(username):
     test = u.comment_karma
   except:
     return True
-  if int(u.created_utc) < int(time.time()) - (86400 * Config.NewUserDays ):
+  if int(u.created_utc) > int(time.time()) - (86400 * Config.NewUserDays):
     return True
+
   if Config.UserKarmaType == "comment":
     karma = reddit.redditor(u.name).comment_karma
   elif Config.UserKarmaType == "link":
@@ -58,7 +59,7 @@ def checkuser(username):
   else:
     karma = 9999999
   if karma <= Config.UserKarma:
-    filter = True
+    print(Config.UserKarma)
     return True
   for comment in  reddit.redditor(username).comments.new(limit=10) :
     commenttime += ( int(currenttime) - int(comment.created_utc) )
@@ -110,6 +111,7 @@ while True:
                         usertest = checkuser(msg.author.name)
                         try:
                           if text.index(Config.expired_trigger.lower()) > -1:
+                             print( str( usertest ))
                              if not usertest:
                                expired = True
                         except ValueError:
