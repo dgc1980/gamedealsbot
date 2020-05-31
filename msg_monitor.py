@@ -97,7 +97,7 @@ while True:
                                 responded = 0
                         except AttributeError:
                             responded = 0
-                logging.info("Message recieved")
+                logging.info("Message recieved from " + msg.author.name + ": " + msg.body)
             except AttributeError:
                 logging.info("error checking comment by: " + msg.author.name)
             try:
@@ -111,17 +111,14 @@ while True:
                         usertest = checkuser(msg.author.name)
                         try:
                           if text.index(Config.expired_trigger.lower()) > -1:
-                             print( str( usertest ))
-                             if not usertest:
-                               expired = True
+                            expired = True
                         except ValueError:
-                             pass
+                            pass
                         try:
                           if text.index(Config.restore_trigger.lower()) > -1:
-                             if not usertest:
-                               oops = True
+                            oops = True
                         except ValueError:
-                             pass
+                            pass
                         try:
                           if text.index(Config.expired_schedule.lower()) > -1:
                            if msg.author.name == msg.submission.author.name or ismod:
