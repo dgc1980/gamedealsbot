@@ -59,13 +59,13 @@ def getsteamexpiry(steamurl):
                 'lastagecheckage': '1-0-1902' }
   r = requests.get(steamurl, headers=headers, cookies=cookies )
   # Offer ends 13 June</p>
-  if re.search("Offer ends ([\w\ ]+)</p>", r.text) is not None:
+  if re.search("\$DiscountCountdown", r.text) is not None:
+    match1 = re.search("\$DiscountCountdown, ([\d]+)", r.text)
+    return match1.group(1)
+  elif re.search("Offer ends ([\w\ ]+)</p>", r.text) is not None:
     match1 = re.search("Offer ends ([\w\ ]+)</p>", r.text)
     enddate= dateparser.parse( "10am " + match1.group(1)  , settings={'PREFER_DATES_FROM': 'future', 'TIMEZONE': 'US/Pacific','TO_TIMEZONE': 'UTC' } )
     return time.mktime( enddate.timetuple() )
-  elif re.search("\$DiscountCountdown", r.text) is not None:
-    match1 = re.search("\$DiscountCountdown, ([\d]+)", r.text)
-    return match1.group(1)
   return
 
 
