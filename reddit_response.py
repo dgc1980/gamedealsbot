@@ -5,9 +5,14 @@ import time
 import praw
 import prawcore
 import requests
+import os
+import datetime
 import Config
 import logging
 import re
+import dateparser
+
+
 from bs4 import BeautifulSoup
 reddit = praw.Reddit(client_id=Config.cid,
                      client_secret=Config.secret,
@@ -44,10 +49,32 @@ class LinkError(Error):
 f = open(apppath+"postids.txt","a+")
 f.close()
 
+
+def getsteamexpiry(steamurl):
+  headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'}
+  cookies = {
+                'wants_mature_content': '1',
+                'birthtime': '-2148631199',
+                'lastagecheckage': '1-0-1902' }
+  r = requests.get(steamurl, headers=headers, cookies=cookies )
+  # Offer ends 13 June</p>
+  if re.search("Offer ends ([\w\ ]+)</p>", r.text) is not None:
+    match1 = re.search("Offer ends ([\w\ ]+)</p>", r.text)
+    enddate= dateparser.parse( "10am " + match1.group(1)  , settings={'PREFER_DATES_FROM': 'future', 'TIMEZONE': 'US/Pacific','TO_TIMEZONE': 'UTC' } )
+    return time.mktime( enddate.timetuple() )
+  elif re.search("\$DiscountCountdown", r.text) is not None:
+    match1 = re.search("\$DiscountCountdown, ([\d]+)", r.text)
+    return match1.group(1)
+  return
+
+
+
 def logID(postid):
     f = open(apppath+"postids.txt","a+")
     f.write(postid + "\n")
     f.close()
+
 
 def respond(submission):
     footer = """
@@ -82,6 +109,18 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
     if not submission.is_self:
       url = submission.url
 
+    if re.search("store.steampowered.com/(sub|app)", url) is not None:
+     getexp = getsteamexpiry( url )
+     if getexp is not None:
+       try:
+         cursorObj = con.cursor()
+         cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,getexp) )
+         con.commit()
+         logging.info("setting up schedule: bot for: " + submission.id)
+         reply_reason = "Steam Game"
+         reply_text = "^(automatic deal expiry set for " + datetime.datetime.fromtimestamp(getexp).strftime('%Y-%m-%d %H:%M:%S') + " UTC)\n\n"
+       except:
+         pass
 
 ### Bundle Giveaways
     if re.search("(humblebundle\.com(?!(/store|/monthly))|fanatical\.com/(.*)bundle|(?!freebies\.)indiegala\.com(?!(/store|/crackerjack)))", url) is not None:

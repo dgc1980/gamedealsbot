@@ -5,6 +5,7 @@ import prawcore
 import requests
 import logging
 import datetime
+import dateparser
 import os
 import re
 
@@ -143,17 +144,21 @@ while True:
                             msg.submission.mod.flair(text=rows[0][2], css_class='')
                           msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
                         elif setsched:
-                          try:
-                            match1 = re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text)
-                            tm = time.mktime(datetime.datetime.strptime(match1.group(1), "%H:%M %d/%m/%Y").timetuple())
+                          #try:
+                            match1 = re.search("set expiry\ ([\w\:\ \-\+]+)", text)
+                            #tm = time.mktime(datetime.datetime.strptime(match1.group(1), "%H:%M %d/%m/%Y").timetuple())
+                            print( match1 )
+                            tm = dateparser.parse( match1.group(1), settings={'PREFER_DATES_FROM': 'future', 'TIMEZONE': 'UTC', 'TO_TIMEZONE': 'UTC'} )
+                            tm2 = time.mktime( tm.timetuple() )
                             cursorObj = con.cursor()
-                            cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm) )
+                            cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm2) )
                             con.commit()
-                            logging.info("setting up schedule: " + msg.author.name)
-                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+" .").mod.distinguish(how='yes')
-                          except:
-                            pass
-                          msg.mark_read()
+                            logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm)  )
+
+                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm)).mod.distinguish(how='yes')
+                          #except:
+                          #  pass
+                            msg.mark_read()
                         elif expired and not usertest:
                             title_url = msg.submission.url
                             cursorObj = con.cursor()
