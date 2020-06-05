@@ -77,6 +77,7 @@ def logID(postid):
 
 
 def respond(submission):
+    post_footer = True
     footer = """
 
 If this deal has expired, you can reply to this comment with `"""+Config.expired_trigger+"""` to automatically close it.  
@@ -118,7 +119,8 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
          con.commit()
          logging.info("setting up schedule: bot for: " + submission.id)
          reply_reason = "Steam Game"
-         reply_text = "^(automatic deal expiry set for " + datetime.datetime.fromtimestamp(getexp).strftime('%Y-%m-%d %H:%M:%S') + " UTC)\n\n"
+         post_footer = False
+         #reply_text = "^(automatic deal expiry set for " + datetime.datetime.fromtimestamp(int(getexp)).strftime('%Y-%m-%d %H:%M:%S') + " UTC)\n\n"
        except:
          pass
 
@@ -131,6 +133,22 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
 
 If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
 
+### chrono.gg auto expire
+    if re.search("chrono.gg", url) is not None:
+      try:
+        r = requests.get( url )
+        match1 = re.search('"endsAt":"([\w\-\:\.]+)"', r.text)
+        enddate= dateparser.parse( match1.group(1)  , settings={'PREFER_DATES_FROM': 'future', 'TO_TIMEZONE': 'UTC' } )
+        expdate = time.mktime( enddate.timetuple() )
+        cursorObj = con.cursor()
+        cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,expdate) )
+        con.commit()
+        logging.info("setting up schedule: bot for: " + submission.id)
+        reply_reason = "chrono.gg"
+        post_footer = False
+        #reply_text = "^(automatic deal expiry set for " + datetime.datetime.fromtimestamp(int(expdate)).strftime('%Y-%m-%d %H:%M:%S') + " UTC)\n\n"
+      except:
+        pass
 
 ### GOG.com Info
     if re.search("gog.com", url) is not None:
@@ -242,13 +260,13 @@ Charity links:
 
 
 
-    if reply_text is not "":
-      comment = submission.reply(reply_text+"\n\n*****\n\n"+footer)
-    else:
-      comment = submission.reply(footer)
-    comment.mod.distinguish(sticky=True)
-
-    logging.info("Replied to: " + submission.title + "   Reason: " + reply_reason)
+    if post_footer:
+      if reply_text is not "":
+        comment = submission.reply(reply_text+"\n\n*****\n\n"+footer)
+      else:
+        comment = submission.reply(footer)
+      comment.mod.distinguish(sticky=True)
+      logging.info("Replied to: " + submission.title + "   Reason: " + reply_reason)
     logID(submission.id)
     return
 

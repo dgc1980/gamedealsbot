@@ -145,6 +145,17 @@ while True:
                           msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
                         elif setsched:
                           #try:
+                          if re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text) is not None:
+                            match1 = re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text)
+                            tm = datetime.datetime.strptime(match1.group(1), "%H:%M %d/%m/%Y")
+                            tm2 = time.mktime(tm.timetuple())
+                            cursorObj = con.cursor()
+                            cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm2) )
+                            con.commit()
+                            logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm.strftime('%Y-%m-%d %H:%M:%S'))  )
+                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm.strftime('%Y-%m-%d %H:%M:%S')) + " UTC").mod.distinguish(how='yes')
+                            msg.mark_read()
+                          else:
                             match1 = re.search("set expiry\ ([\w\:\ \-\+]+)", text)
                             #tm = time.mktime(datetime.datetime.strptime(match1.group(1), "%H:%M %d/%m/%Y").timetuple())
                             print( match1 )
@@ -153,12 +164,12 @@ while True:
                             cursorObj = con.cursor()
                             cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm2) )
                             con.commit()
-                            logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm)  )
-
-                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm)).mod.distinguish(how='yes')
+                            logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm.strftime('%Y-%m-%d %H:%M:%S'))  )
+                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm.strftime('%Y-%m-%d %H:%M:%S')) + " UTC").mod.distinguish(how='yes')
+                            msg.mark_read()
                           #except:
                           #  pass
-                            msg.mark_read()
+                          msg.mark_read()
                         elif expired and not usertest:
                             title_url = msg.submission.url
                             cursorObj = con.cursor()
