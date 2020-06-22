@@ -122,11 +122,11 @@ while True:
                             pass
                         try:
                           if text.index(Config.expired_schedule.lower()) > -1:
-                           if msg.author.name == msg.submission.author.name or ismod and Config.ScheduleType = 'submitter':
+                           if msg.author.name == msg.submission.author.name or ismod and Config.ScheduleType == 'submitter':
                              setsched = True
-                           elif ismod and Config.ScheduleType = 'mods':
+                           elif ismod and Config.ScheduleType == 'mods':
                              setsched = True
-                           elif Config.ScheduleType = 'anyone':
+                           elif Config.ScheduleType == 'anyone':
                              setsched = True
                         except ValueError:
                              pass
