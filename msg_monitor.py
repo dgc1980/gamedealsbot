@@ -122,10 +122,21 @@ while True:
                             pass
                         try:
                           if text.index(Config.expired_schedule.lower()) > -1:
-                           if msg.author.name == msg.submission.author.name or ismod:
+                           if msg.author.name == msg.submission.author.name or ismod and Config.ScheduleType = 'submitter':
+                             setsched = True
+                           elif ismod and Config.ScheduleType = 'mods':
+                             setsched = True
+                           elif Config.ScheduleType = 'anyone':
                              setsched = True
                         except ValueError:
                              pass
+
+                        if msg.submission.subreddit != Config.subreddit:
+                          setsched = False
+                          oops = False
+                          expired = False
+                          logging.info("abuse https://redd.id/" + msg.submission.id + " by: "+msg.author.name)
+                          msg.mark_read()
 
                         if oops:
                           msg.submission.mod.unspoiler()

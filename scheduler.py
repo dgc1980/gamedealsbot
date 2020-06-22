@@ -48,11 +48,12 @@ def runjob():
   cursorObj.execute('SELECT * FROM schedules WHERE schedtime <= ' + tm + ';')
   rows = cursorObj.fetchall()
   if len(rows) is not 0:
-    if reddit.submission(rows[0][1]).removed_by_category is not None:
-      logging.info("running schedule on https://reddit.com/" + rows[0][1])
-      cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ rows[0][1]+'"')
-      con.commit()
-      reddit.submission(rows[0][1]).mod.spoiler()
+    for row in rows:
+      if reddit.submission(row[1]).removed_by_category is not "None":
+        logging.info("running schedule on https://reddit.com/" + row[1])
+        cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
+        con.commit()
+        reddit.submission(row[1]).mod.spoiler()
 
 
 

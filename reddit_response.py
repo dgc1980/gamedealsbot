@@ -110,6 +110,19 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
     if not submission.is_self:
       url = submission.url
 
+
+    if re.search("epicgames.com", url.lower()) is not None:
+      if re.search("free", submission.title.lower()) is not None:
+        postdate = dateparser.parse( str(submission.created) , settings={'TO_TIMEZONE': 'US/Pacific' } )
+        if postdate.weekday() == 3 and postdate.hour < 8: # this is a karma whore!
+          submission.remove
+          reply = "Thanks for your submission, but we require a deal to be live when submitted"
+          comment = submission.reply(reply)
+          comment.mod.distinguish(sticky=True)
+          logID(submission.id)
+          return
+
+
     if re.search("store.steampowered.com/(sub|app)", url) is not None:
      getexp = getsteamexpiry( url )
      if getexp is not None:
