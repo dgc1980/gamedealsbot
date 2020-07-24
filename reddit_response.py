@@ -130,6 +130,7 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
          cursorObj = con.cursor()
          cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,getexp) )
          con.commit()
+         logging.info("[Steam] | " + submission.title + " | https://redd.it/" + submission.id )
          logging.info("setting up schedule: bot for: " + submission.id)
          reply_reason = "Steam Game"
          post_footer = False
@@ -142,6 +143,11 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
       if re.search("indiegala.com.+giveaway", url) is None and re.search("freebies.indiegala.com", url) is None:
         reply_reason = "Bundle Giveaway"
         reply_text = """
+**Warning**
+
+With current reports of Humble Bundle account access being restricted, we would like to remind people that the supplied keys are for personal use only as stated on the bundle pages.  There may be a risk of account suspensions on Humble Bundle for trading/gifting.  
+[^(more information)](https://redd.it/hwobv8)
+
 **Giveaways**
 
 If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
@@ -156,6 +162,7 @@ If you wish to give away your extra game keys, please post them under this comme
         cursorObj = con.cursor()
         cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,expdate) )
         con.commit()
+        logging.info("[Chrono] | " + submission.title + " | https://redd.it/" + submission.id )
         logging.info("setting up schedule: bot for: " + submission.id)
         reply_reason = "chrono.gg"
         post_footer = False
