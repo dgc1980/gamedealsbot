@@ -139,7 +139,16 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
          pass
 
 ### Bundle Giveaways
-    if re.search("(humblebundle\.com(?!(/store|/monthly))|fanatical\.com/(.*)bundle|(?!freebies\.)indiegala\.com(?!(/store|/crackerjack)))", url) is not None:
+    if re.search("(fanatical\.com/(.*)bundle|(?!freebies\.)indiegala\.com(?!(/store|/crackerjack)))", url) is not None:
+      if re.search("indiegala.com.+giveaway", url) is None and re.search("freebies.indiegala.com", url) is None:
+        reply_reason = "Bundle Giveaway"
+        reply_text = """
+**Giveaways**
+
+If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
+
+### Bundle Giveaways for Humble
+    if re.search("(humblebundle\.com(?!(/store|/monthly)))", url) is not None:
       if re.search("indiegala.com.+giveaway", url) is None and re.search("freebies.indiegala.com", url) is None:
         reply_reason = "Bundle Giveaway"
         reply_text = """
@@ -169,6 +178,24 @@ If you wish to give away your extra game keys, please post them under this comme
         #reply_text = "^(automatic deal expiry set for " + datetime.datetime.fromtimestamp(int(expdate)).strftime('%Y-%m-%d %H:%M:%S') + " UTC)\n\n"
       except:
         pass
+
+### 2game coupon Info
+    if re.search("2game.com", url) is not None:
+      reply_reason = "2Game Coupon"
+      reply_text = """
+**Coupon**  
+Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
+^(May not be available on all offers.  We do not receive compensation for this code.)"""
+
+### allyouplay coupon Info
+    if re.search("allyouplay.com", url) is not None:
+      reply_reason = "allyouplay Coupon"
+      reply_text = """
+**Coupon**  
+Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
+^(May not be available on all offers.  We do not receive compensation for this code.)"""
+
+
 
 ### GOG.com Info
     if re.search("gog.com", url) is not None:
