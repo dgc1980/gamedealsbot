@@ -37,13 +37,13 @@ logging.getLogger('schedule').propagate = False
 
 
 
-con = sqlite3.connect(apppath+'gamedealsbot.db')
 
 logging.info("starting scheduler...")
 
 
 def runjob():
   tm = str(int(time.time()))
+  con = sqlite3.connect(apppath+'gamedealsbot.db')
   cursorObj = con.cursor()
   cursorObj.execute('SELECT * FROM schedules WHERE schedtime <= ' + tm + ';')
   rows = cursorObj.fetchall()
@@ -54,6 +54,7 @@ def runjob():
         cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
         con.commit()
         reddit.submission(row[1]).mod.spoiler()
+  con.close();
 
 
 

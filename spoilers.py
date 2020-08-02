@@ -32,7 +32,6 @@ logging.getLogger('').addHandler(console)
 
 logging.getLogger('schedule').propagate = False
 
-con = sqlite3.connect(apppath+'gamedealsbot.db')
 
 logging.info("scanning spoiler...")
 
@@ -52,11 +51,12 @@ def runspoiler(postlimit):
     if submission.spoiler and not isflair :
       if not isflair and flair != "":
         flairtime = str( int(time.time()))
+        con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
         cursorObj = con.cursor()
         cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
         #cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+submission.id+'","'+submission.link_flair_text+'",' + flairtime + ')')
         con.commit()
-
+        con.close()
       #if submission.mod.flair != "":
       #  submission.mod.flair(text='Expired: ' + submission.mod.flair, css_class='expired')
       #else
@@ -67,12 +67,15 @@ def runspoiler(postlimit):
     elif not submission.spoiler and isflair:
       submission.mod.flair(text='')
       logging.info("unflairing spoiled post of " + submission.title)
+      con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
       cursorObj = con.cursor()
       cursorObj.execute('SELECT * FROM flairs WHERE postid = "'+submission.id+'"')
       rows = cursorObj.fetchall()
       if len(rows) is not 0 and rows[0][2] != "Expired":
         cursorObj.execute('DELETE FROM flairs WHERE postid = "'+submission.id+'"')
         submission.mod.flair(text=rows[0][2], css_class='')
+      con.close()
+
 
 
 schedule.every(1).minutes.do(runspoiler, 50)

@@ -35,7 +35,6 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
-con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
 
 class Error(Exception):
     """Base class"""
@@ -127,9 +126,11 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
      getexp = getsteamexpiry( url )
      if getexp is not None:
        try:
+         con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
          cursorObj = con.cursor()
          cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,getexp) )
          con.commit()
+         con.close()
          logging.info("[Steam] | " + submission.title + " | https://redd.it/" + submission.id )
          logging.info("setting up schedule: bot for: " + submission.id)
          reply_reason = "Steam Game"
@@ -168,9 +169,11 @@ If you wish to give away your extra game keys, please post them under this comme
         match1 = re.search('"endsAt":"([\w\-\:\.]+)"', r.text)
         enddate= dateparser.parse( match1.group(1)  , settings={'PREFER_DATES_FROM': 'future', 'TO_TIMEZONE': 'UTC' } )
         expdate = time.mktime( enddate.timetuple() )
+        con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
         cursorObj = con.cursor()
         cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,expdate) )
         con.commit()
+        con.close
         logging.info("[Chrono] | " + submission.title + " | https://redd.it/" + submission.id )
         logging.info("setting up schedule: bot for: " + submission.id)
         reply_reason = "chrono.gg"
@@ -336,6 +339,7 @@ while True:
 ### Weekly Post Limit
                 if Config.WeeklyPostLimit > 0:
                   currentweek = time.strftime('%Y%W')
+                  con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
                   cursorObj = con.cursor()
                   cursorObj.execute('SELECT * FROM weeklyposts WHERE username = "'+submission.author.name+'" AND currentweek = '+currentweek)
                   rows = cursorObj.fetchall()
@@ -354,12 +358,14 @@ while True:
                       curcount=curcount+1
                       cursorObj.execute("UPDATE weeklyposts SET postcount = " + str(curcount) + ' WHERE id = ' + str(rows[0][0]))
                       con.commit()
+                  con.close()
 ###
 
 
 ### Daily Post Limit
                 if Config.DailyPostLimit > 0:
                   currentday = time.strftime('%Y%m%d')
+                  con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
                   cursorObj = con.cursor()
                   cursorObj.execute('SELECT * FROM dailyposts WHERE username = "'+submission.author.name+'" AND currentday = '+currentday)
                   rows = cursorObj.fetchall()
@@ -378,6 +384,7 @@ while True:
                       curcount=curcount+1
                       cursorObj.execute("UPDATE dailyposts SET postcount = " + str(curcount) + ' WHERE id = ' + str(rows[0][0]))
                       con.commit()
+                  con.close
 ###
 
 

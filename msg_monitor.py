@@ -36,7 +36,6 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
-con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
 
 
 def checkuser(username):
@@ -142,6 +141,7 @@ while True:
                           msg.submission.mod.unspoiler()
                           msg.submission.mod.flair(text='')
                           logging.info("unflairing " + msg.submission.title + "requested by: "+msg.author.name)
+                          con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
                           cursorObj = con.cursor()
                           cursorObj.execute('SELECT * FROM flairs WHERE postid = "'+msg.submission.id+'"')
                           rows = cursorObj.fetchall()
@@ -153,16 +153,19 @@ while True:
                             except:
                               pass
                             msg.submission.mod.flair(text=rows[0][2], css_class='')
+                          con.close()
                           msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
                         elif setsched:
                           #try:
                           if re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text) is not None:
+                            con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
                             match1 = re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text)
                             tm = datetime.datetime.strptime(match1.group(1), "%H:%M %d/%m/%Y")
                             tm2 = time.mktime(tm.timetuple())
                             cursorObj = con.cursor()
                             cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm2) )
                             con.commit()
+                            con.close()
                             logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm.strftime('%Y-%m-%d %H:%M:%S'))  )
                             myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm.strftime('%Y-%m-%d %H:%M:%S')) + " UTC").mod.distinguish(how='yes')
                             msg.mark_read()
@@ -172,9 +175,11 @@ while True:
                             print( match1 )
                             tm = dateparser.parse( match1.group(1), settings={'PREFER_DATES_FROM': 'future', 'TIMEZONE': 'UTC', 'TO_TIMEZONE': 'UTC'} )
                             tm2 = time.mktime( tm.timetuple() )
+                            con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
                             cursorObj = con.cursor()
                             cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm2) )
                             con.commit()
+                            con.close()
                             logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm.strftime('%Y-%m-%d %H:%M:%S'))  )
                             myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm.strftime('%Y-%m-%d %H:%M:%S')) + " UTC").mod.distinguish(how='yes')
                             msg.mark_read()
@@ -183,6 +188,7 @@ while True:
                           msg.mark_read()
                         elif expired and not usertest:
                             title_url = msg.submission.url
+                            con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
                             cursorObj = con.cursor()
                             if msg.submission.link_flair_text is not None:
                               if msg.submission.link_flair_text != "Expired":
@@ -190,6 +196,7 @@ while True:
                                 cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (msg.submission.id,msg.submission.link_flair_text,flairtime ) )
                                 con.commit()
                             msg.submission.mod.spoiler()
+                            con.close()
                             #if msg.submission.mod.flair != "":
                             #  msg.submission.mod.flair(text='Expired: ' + msg.submission.mod.flair, css_class='expired')
                             #else
