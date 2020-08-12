@@ -198,6 +198,14 @@ Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.
 Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
 ^(May not be available on all offers.  We do not receive compensation for this code.)"""
 
+### Voidu coupon Info
+    if re.search("voidu.com", url) is not None:
+      reply_reason = "Voidu Coupon"
+      reply_text = """
+**Coupon**  
+Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
+^(May not be available on all offers.  We do not receive compensation for this code.)"""
+
 
 
 ### GOG.com Info

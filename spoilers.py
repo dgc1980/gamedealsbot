@@ -5,6 +5,7 @@ import prawcore
 import requests
 import logging
 import Config
+import json
 from bs4 import BeautifulSoup
 import schedule
 responded = 0
@@ -32,6 +33,9 @@ logging.getLogger('').addHandler(console)
 
 logging.getLogger('schedule').propagate = False
 
+f = open(apppath+"awards.txt","a+")
+f.close()
+
 
 logging.info("scanning spoiler...")
 
@@ -48,13 +52,23 @@ def runspoiler(postlimit):
     except ValueError:
       pass
 
+
+
+    if len(submission.all_awardings) > 0 :
+      if submission.id not in open(apppath+'awards.txt').read():
+        continue
+      submission.report("Has Award")
+      f = open(apppath+"awards.txt","a+")
+      f.write(submission.id + "\n")
+      f.close()
+      logging.info("post has award :" + submission.id)
+
     if submission.spoiler and not isflair :
       if not isflair and flair != "":
         flairtime = str( int(time.time()))
         con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
         cursorObj = con.cursor()
         cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
-        #cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES("'+submission.id+'","'+submission.link_flair_text+'",' + flairtime + ')')
         con.commit()
         con.close()
       #if submission.mod.flair != "":
