@@ -12,6 +12,7 @@ import logging
 import re
 import dateparser
 
+os.environ['TZ'] = 'UTC'
 
 from bs4 import BeautifulSoup
 reddit = praw.Reddit(client_id=Config.cid,
@@ -110,12 +111,20 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
       url = submission.url
 
 
-    if re.search("epicgames.com", url.lower()) is not None:
-      if re.search("free", submission.title.lower()) is not None:
-        postdate = dateparser.parse( str(submission.created) , settings={'TO_TIMEZONE': 'US/Pacific' } )
-        if postdate.weekday() == 3 and postdate.hour < 8: # this is a karma whore!
-          submission.remove
-          reply = "Thanks for your submission, but we require a deal to be live when submitted"
+    if "epicgames.com" in url.lower():
+      if "free" in submission.title.lower():
+        postdate = dateparser.parse( str(submission.created_utc) , settings={'TO_TIMEZONE': 'US/Pacific', 'TIMEZONE': 'UTC' } )
+        #print( postdate.weekday() )
+        #print( postdate.hour )
+
+        if postdate.weekday() == 3 and postdate.hour < 8:
+          logging.info( "removing early EGS post | https://redd.it/" + submission.id )
+          reply = "* we require a deal to be live when submitted"
+          comment = submission.reply("Unfortunately, your submission has been removed for the following reasons:\n\n" +
+          reply +
+          "\n\nI am a bot, and this action was performed automatically. Please [contact the moderators of this subreddit](https://www.reddit.com/message/compose/?to=/r/GameDeals) if you have any questions or concerns."
+          )
+          submission.mod.remove()
           comment = submission.reply(reply)
           comment.mod.distinguish(sticky=True)
           logID(submission.id)
@@ -123,6 +132,29 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
 
 
     if re.search("store.steampowered.com/(sub|app)", url) is not None:
+     r = requests.get( url )
+
+     if re.search("WEEK LONG DEAL", r.text) is not None:
+       today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+       monday = today - datetime.timedelta(days=today.weekday())
+       datetext = monday.strftime('%Y%m%d')
+       con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
+       cursorObj = con.cursor()
+       cursorObj.execute('SELECT * FROM weeklongdeals WHERE week = ' + datetext )
+       rows = cursorObj.fetchall()
+       if len(rows) == 0:
+         removereason = "* It appears to be a part of the Weeklong deals. \n\nAs there are multiple games on sale, please post a thread with more games in the title [with this link](https://store.steampowered.com/search/?filter=weeklongdeals)."
+       else:
+         removereason = "* It appears to be a part of the [Weeklong deals](https://redd.it/" + rows[0][2] + "). \n\nAs there are multiple games on sale, please include a comment within the existing thread to discuss this deal."
+       comment = submission.reply("Unfortunately, your submission has been removed for the following reasons:\n\n" + 
+            removereason +
+            "\n\nI am a bot, and this action was performed automatically. Please [contact the moderators of this subreddit](https://www.reddit.com/message/compose/?to=/r/GameDeals) if you have any questions or concerns."
+       )
+       comment.mod.distinguish(sticky=True)
+       submission.mod.remove()
+       return
+
+
      getexp = getsteamexpiry( url )
      if getexp is not None:
        try:
@@ -328,6 +360,14 @@ Charity links:
     logID(submission.id)
     return
 
+
+
+#submission = reddit.submission("k5zvjl")
+#respond( submission )
+
+
+
+
 while True:
     try:
         logging.info("Initializing bot...")
@@ -344,6 +384,20 @@ while True:
                 #logging.info("User: "+submission.author.name)
 
                 donotprocess=False
+
+                ### handle weeklong deals
+                if re.search("steampowered.com.*?filter=weeklongdeals", submission.url) is not None:
+                  cursorObj.execute('SELECT * FROM weeklongdeals WHERE week = ' + datetext )
+                  rows = cursorObj.fetchall()
+                  if len(rows) == 0:
+                    today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                    monday = today - datetime.timedelta(days=today.weekday())
+                    cursorObj.execute('INSERT INTO weeklongdeals (week, post) VALUES (?, ?)', (monday.strftime('%Y%m%d'), submission.id))
+                    con.commit()
+
+
+                ###
+
 ### Weekly Post Limit
                 if Config.WeeklyPostLimit > 0:
                   currentweek = time.strftime('%Y%W')
@@ -405,7 +459,7 @@ while True:
                             break
                     except AttributeError:
                         pass
-                else: # no break before, so no comment from GPDBot
+                else: # no break before, so no comment from GDB
                     if not donotprocess:
                       respond(submission)
                       continue

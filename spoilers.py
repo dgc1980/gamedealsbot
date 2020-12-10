@@ -46,6 +46,8 @@ def runspoiler(postlimit):
     else:
       flair = ""
     isflair = False
+
+
     try:
       if flair.index('expired') > -1:
         isflair = True
@@ -53,15 +55,51 @@ def runspoiler(postlimit):
       pass
 
 
-
     if len(submission.all_awardings) > 0 :
-      if submission.id not in open(apppath+'awards.txt').read():
+      if submission.id in open(apppath+'awards.txt').read():
         continue
-      submission.report("Has Award")
-      f = open(apppath+"awards.txt","a+")
-      f.write(submission.id + "\n")
-      f.close()
-      logging.info("post has award :" + submission.id)
+
+      con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
+      cursorObj = con.cursor()
+      cursorObj.execute('SELECT * FROM awards WHERE postid = "'+submission.id+'"')
+      rows = cursorObj.fetchall()
+      if len(rows) is not 0:
+        # already has awards
+        if rows[0][2] < len(submission.all_awardings):
+          logging.info("found more awards on :" + submission.id)
+          cursorObj.execute('UPDATE awards SET counted = ? WHERE postid = ?', (len(submission.all_awardings),submission.id)  )
+          con.commit()
+          con.close()
+          has_gild = ""
+          for award in submission.all_awardings:
+            if award['name'] == "Silver":
+              has_gild = "** Silver/Gold/Plat found **"
+            if award['name'] == "Gold":
+              has_gild = "** Silver/Gold/Plat found **"
+            if award['name'] == "Platinum":
+              has_gild = "** Silver/Gold/Plat found **"
+
+
+          reddit.subreddit('gamedeals').message('Post Awards Again', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id + '\n\n' + has_gild)
+
+
+      else:
+        #first time
+        logging.info("found awards on :" + submission.id)
+        cursorObj.execute('INSERT INTO awards(postid, counted) VALUES(?, ?)', (submission.id, 1)  )
+        con.commit()
+        con.close()
+        has_gild = ""
+        for award in submission.all_awardings:
+          if award['name'] == "Silver":
+            has_gild = "** Silver/Gold/Plat found **"
+          if award['name'] == "Gold":
+            has_gild = "** Silver/Gold/Plat found **"
+          if award['name'] == "Platinum":
+            has_gild = "** Silver/Gold/Plat found **"
+
+        reddit.subreddit('gamedeals').message('Post Awards', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id + '\n\n' + has_gild)
+
 
     if submission.spoiler and not isflair :
       if not isflair and flair != "":

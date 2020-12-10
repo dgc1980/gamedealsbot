@@ -12,6 +12,15 @@ def make_sql_table(con):
     cursorObj.execute("CREATE TABLE IF NOT EXISTS schedules(id integer PRIMARY KEY, postid text, schedtime integer)")
     con.commit()
 
+
+    cursorObj.execute("CREATE TABLE IF NOT EXISTS awards(id integer PRIMARY KEY, postid text, counted integer)")
+    con.commit()
+
+    cursorObj.execute("CREATE TABLE IF NOT EXISTS weeklongdeals(id integer PRIMARY KEY, week text, post text)")
+    con.commit()
+
+
+
 con = sqlite3.connect('gamedealsbot.db')
 make_sql_table(con)
 

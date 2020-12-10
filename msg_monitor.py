@@ -97,7 +97,9 @@ while True:
                                 responded = 0
                         except AttributeError:
                             responded = 0
-                logging.info("Message recieved from " + msg.author.name + ": " + msg.body)
+                if msg.author is not None:
+                    logging.info("Message recieved from " + msg.author.name + ": " + msg.body)
+                    logging.info("* " + msg.submission.id + ": " + msg.submission.title)
             except AttributeError:
                 logging.info("error checking comment by: " + msg.author.name)
             try:
@@ -138,23 +140,28 @@ while True:
                           msg.mark_read()
 
                         if oops:
-                          msg.submission.mod.unspoiler()
-                          msg.submission.mod.flair(text='')
-                          logging.info("unflairing " + msg.submission.title + "requested by: "+msg.author.name)
-                          con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
-                          cursorObj = con.cursor()
-                          cursorObj.execute('SELECT * FROM flairs WHERE postid = "'+msg.submission.id+'"')
-                          rows = cursorObj.fetchall()
-                          msg.mark_read()
-                          if len(rows) is not 0 and rows[0][2] != "Expired":
-                            try:
-                              cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
-                              con.commit()
-                            except:
-                              pass
-                            msg.submission.mod.flair(text=rows[0][2], css_class='')
-                          con.close()
-                          msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
+                          if not msg.submission.spoiler:
+                              myreply = msg.reply("this deal is already available, we use `spoilers` and `flairs` to distinguish a deal has been marked expired").mod.distinguish(how='yes')
+                              msg.mark_read()
+                              logging.info("already available... responded to: " + msg.author.name)
+                          else:
+                              msg.submission.mod.unspoiler()
+                              msg.submission.mod.flair(text='')
+                              logging.info("unflairing " + msg.submission.title + "requested by: "+msg.author.name)
+                              con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
+                              cursorObj = con.cursor()
+                              cursorObj.execute('SELECT * FROM flairs WHERE postid = "'+msg.submission.id+'"')
+                              rows = cursorObj.fetchall()
+                              msg.mark_read()
+                              if len(rows) is not 0 and rows[0][2] != "Expired":
+                                try:
+                                  cursorObj.execute('DELETE FROM flairs WHERE postid = "'+msg.submission.id+'"')
+                                  con.commit()
+                                except:
+                                  pass
+                                msg.submission.mod.flair(text=rows[0][2], css_class='')
+                              con.close()
+                              msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
                         elif setsched:
                           #try:
                           if re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text) is not None:
@@ -187,24 +194,25 @@ while True:
                           #  pass
                           msg.mark_read()
                         elif expired and not usertest:
-                            title_url = msg.submission.url
-                            con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
-                            cursorObj = con.cursor()
-                            if msg.submission.link_flair_text is not None:
-                              if msg.submission.link_flair_text != "Expired":
-                                flairtime = str( int(time.time()))
-                                cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (msg.submission.id,msg.submission.link_flair_text,flairtime ) )
-                                con.commit()
-                            msg.submission.mod.spoiler()
-                            con.close()
-                            #if msg.submission.mod.flair != "":
-                            #  msg.submission.mod.flair(text='Expired: ' + msg.submission.mod.flair, css_class='expired')
-                            #else
-                            #  msg.submission.mod.flair(text='Expired', css_class='expired')
-                            msg.submission.mod.flair(text='Expired', css_class='expired')
-                            logging.info("flairing... responded to: " + msg.author.name)
-                            myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
-                            msg.mark_read()
+                            if msg.submission.spoiler:
+                                myreply = msg.reply("this deal has already been marked expired, we use `spoilers` and `flairs` to distinguish a deal has been marked expired").mod.distinguish(how='yes')
+                                msg.mark_read()
+                                logging.info("already expired... responded to: " + msg.author.name)
+                            else:
+                                title_url = msg.submission.url
+                                con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
+                                cursorObj = con.cursor()
+                                if msg.submission.link_flair_text is not None:
+                                  if msg.submission.link_flair_text != "Expired":
+                                    flairtime = str( int(time.time()))
+                                    cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (msg.submission.id,msg.submission.link_flair_text,flairtime ) )
+                                    con.commit()
+                                msg.submission.mod.spoiler()
+                                con.close()
+                                msg.submission.mod.flair(text='Expired', css_class='expired')
+                                logging.info("flairing... responded to: " + msg.author.name)
+                                myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
+                                msg.mark_read()
                         elif expired and usertest:
                           msg.report('possible bot abuse')
                           logging.info("maybe abuse from user?: https://reddit.com/u/" + msg.author.name + " on post https://reddit.com/" + msg.submission.id )
