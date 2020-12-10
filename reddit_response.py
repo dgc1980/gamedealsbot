@@ -114,12 +114,12 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
     if "epicgames.com" in url.lower():
       if "free" in submission.title.lower():
         postdate = dateparser.parse( str(submission.created_utc) , settings={'TO_TIMEZONE': 'US/Pacific', 'TIMEZONE': 'UTC' } )
-        #print( postdate.weekday() )
-        #print( postdate.hour )
 
-        if postdate.weekday() == 3 and postdate.hour < 8:
+#        if postdate.weekday() == 3 and postdate.hour < 8: # removed for EGS's 15 days of games to make the rule more active
+        if postdate.hour < 8 or postdate.hour > 9:
           logging.info( "removing early EGS post | https://redd.it/" + submission.id )
-          reply = "* we require a deal to be live when submitted"
+          reply = "* we require a deal to be live before posting a submission"
+          reply = "* Either this deal has already been submitted,\n\n* Or this deal has been submitted before it is live."
           comment = submission.reply("Unfortunately, your submission has been removed for the following reasons:\n\n" +
           reply +
           "\n\nI am a bot, and this action was performed automatically. Please [contact the moderators of this subreddit](https://www.reddit.com/message/compose/?to=/r/GameDeals) if you have any questions or concerns."
