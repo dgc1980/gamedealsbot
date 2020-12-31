@@ -115,8 +115,8 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
       if "free" in submission.title.lower():
         postdate = dateparser.parse( str(submission.created_utc) , settings={'TO_TIMEZONE': 'US/Pacific', 'TIMEZONE': 'UTC' } )
 
-#        if postdate.weekday() == 3 and postdate.hour < 8: # removed for EGS's 15 days of games to make the rule more active
-        if postdate.hour < 8 or postdate.hour > 9:
+#        if postdate.hour < 8 or postdate.hour > 9: # used for xmas rule, before being permanently disabled via AM to block community posting due to excessive need to moderate
+        if postdate.weekday() == 3 and postdate.hour < 8: # removed for EGS's 15 days of games to make the rule more active
           logging.info( "removing early EGS post | https://redd.it/" + submission.id )
           reply = "* we require a deal to be live before posting a submission"
           reply = "* Either this deal has already been submitted,\n\n* Or this deal has been submitted before it is live."
@@ -125,7 +125,6 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
           "\n\nI am a bot, and this action was performed automatically. Please [contact the moderators of this subreddit](https://www.reddit.com/message/compose/?to=/r/GameDeals) if you have any questions or concerns."
           )
           submission.mod.remove()
-          comment = submission.reply(reply)
           comment.mod.distinguish(sticky=True)
           logID(submission.id)
           return
@@ -387,6 +386,11 @@ while True:
 
                 ### handle weeklong deals
                 if re.search("steampowered.com.*?filter=weeklongdeals", submission.url) is not None:
+                  con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
+                  today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                  monday = today - datetime.timedelta(days=today.weekday())
+                  datetext = monday.strftime('%Y%m%d')
+                  cursorObj = con.cursor()
                   cursorObj.execute('SELECT * FROM weeklongdeals WHERE week = ' + datetext )
                   rows = cursorObj.fetchall()
                   if len(rows) == 0:
