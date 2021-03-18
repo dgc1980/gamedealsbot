@@ -131,6 +131,8 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
 
 
     if re.search("store.steampowered.com/(sub|app)", url) is not None:
+     if submission.author_flair_css_class is not None and submission.is_self:
+       return
      r = requests.get( url )
 
      if re.search("WEEK LONG DEAL", r.text) is not None:
@@ -142,9 +144,9 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
        cursorObj.execute('SELECT * FROM weeklongdeals WHERE week = ' + datetext )
        rows = cursorObj.fetchall()
        if len(rows) == 0:
-         removereason = "* It appears to be a part of the Weeklong deals. \n\nAs there are multiple games on sale, please post a thread with more games in the title [with this link](https://store.steampowered.com/search/?filter=weeklongdeals)."
+         removereason = "* It appears to be a part of the Weeklong deals. \n\nAs there are multiple games on sale, please post a thread with more games in the title [with this link](https://store.steampowered.com/search/?filter=weeklongdeals).\n\nIf you are the developer or publisher of this game, please leave a detailed disclosure as a top level comment as per [Rule 9](https://www.reddit.com/r/GameDeals/wiki/rules#wiki_9._developers_and_publishers), then [contact the mods for approval](https://www.reddit.com/message/compose?to=%2Fr%2FGameDeals)"
        else:
-         removereason = "* It appears to be a part of the [Weeklong deals](https://redd.it/" + rows[0][2] + "). \n\nAs there are multiple games on sale, please include a comment within the existing thread to discuss this deal."
+         removereason = "* It appears to be a part of the [Weeklong deals](https://redd.it/" + rows[0][2] + "). \n\nAs there are multiple games on sale, please include a comment within the existing thread to discuss this deal.\n\nIf you are the developer or publisher of this game, please leave a detailed disclosure as a top level comment as per [Rule 9](https://www.reddit.com/r/GameDeals/wiki/rules#wiki_9._developers_and_publishers), then [contact the mods for approval](https://www.reddit.com/message/compose?to=%2Fr%2FGameDeals)"
        comment = submission.reply("Unfortunately, your submission has been removed for the following reasons:\n\n" + 
             removereason +
             "\n\nI am a bot, and this action was performed automatically. Please [contact the moderators of this subreddit](https://www.reddit.com/message/compose/?to=/r/GameDeals) if you have any questions or concerns."
@@ -193,6 +195,11 @@ With current reports of Humble Bundle account access being restricted, we would 
 
 If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
 
+        reply_text = """
+**Giveaways**
+
+If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
+
 ### chrono.gg auto expire
     if re.search("chrono.gg", url) is not None:
       try:
@@ -233,6 +240,8 @@ Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.
     if re.search("voidu.com", url) is not None:
       reply_reason = "Voidu Coupon"
       reply_text = """
+**Notice:** Payment is only possible in euros. Purchases with other currencies are still possible, but currency conversion fees will apply. As such, listed prices are only a guide unless paying in euros.
+
 **Coupon**  
 Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
 ^(May not be available on all offers.  We do not receive compensation for this code.)"""
@@ -361,7 +370,7 @@ Charity links:
 
 
 
-#submission = reddit.submission("k5zvjl")
+#submission = reddit.submission("l2na5l")
 #respond( submission )
 
 

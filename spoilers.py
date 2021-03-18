@@ -53,9 +53,10 @@ def runspoiler(postlimit):
         isflair = True
     except ValueError:
       pass
-
+    allowsend =0
 
     if len(submission.all_awardings) > 0 :
+      print("has awards")
       if submission.id in open(apppath+'awards.txt').read():
         continue
 
@@ -72,6 +73,7 @@ def runspoiler(postlimit):
           con.close()
           has_gild = ""
           for award in submission.all_awardings:
+            print( "Award......: " + award['name'] )
             if award['name'] == "Silver":
               has_gild = "** Silver/Gold/Plat found **"
             if award['name'] == "Gold":
@@ -79,8 +81,12 @@ def runspoiler(postlimit):
             if award['name'] == "Platinum":
               has_gild = "** Silver/Gold/Plat found **"
 
+            if award['name'] != "Silver" and award['name'] != "Gold" and award['name'] != "Platinum" and award['name'] != "[deleted]":
+              allowsend = 1
 
-          reddit.subreddit('gamedeals').message('Post Awards Again', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id + '\n\n' + has_gild)
+          if allowsend == 1:
+            reddit.subreddit('gamedeals').message('Post Awards Again', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id)
+            #reddit.subreddit('gamedeals').message('Post Awards Again', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id + '\n\n' + has_gild)
 
 
       else:
@@ -97,8 +103,12 @@ def runspoiler(postlimit):
             has_gild = "** Silver/Gold/Plat found **"
           if award['name'] == "Platinum":
             has_gild = "** Silver/Gold/Plat found **"
+          if award['name'] != "Silver" and award['name'] != "Gold" and award['name'] != "Platinum" and award['name'] != "[deleted]":
+            allowsend = 1
 
-        reddit.subreddit('gamedeals').message('Post Awards', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id + '\n\n' + has_gild)
+        if allowsend == 1:
+          #reddit.subreddit('gamedeals').message('Post Awards', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id + '\n\n' + has_gild)
+          reddit.subreddit('gamedeals').message('Post Awards', 'There has been an Award found on https://new.reddit.com/r/GameDeals/comments/' + submission.id)
 
 
     if submission.spoiler and not isflair :
@@ -133,7 +143,7 @@ def runspoiler(postlimit):
 schedule.every(1).minutes.do(runspoiler, 50)
 schedule.every(1).hours.do(runspoiler, 200)
 
-runspoiler(200)
+runspoiler(10)
 
 while 1:
     schedule.run_pending()
