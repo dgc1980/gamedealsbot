@@ -161,7 +161,7 @@ while True:
                                   pass
                                 msg.submission.mod.flair(text=rows[0][2], css_class='')
                               con.close()
-                              msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+"").mod.distinguish(how='yes')
+                              msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+".").mod.distinguish(how='yes')
                         elif setsched:
                           #try:
                           if re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text) is not None:
@@ -195,7 +195,7 @@ while True:
                           msg.mark_read()
                         elif expired and not usertest:
                             if msg.submission.spoiler:
-                                myreply = msg.reply("this deal has already been marked expired, we use `spoilers` and `flairs` to distinguish a deal has been marked expired").mod.distinguish(how='yes')
+                                myreply = msg.reply("This deal has already been marked expired.  We use both spoilers and a unique flair to distinguish deals that are expired.").mod.distinguish(how='yes')
                                 msg.mark_read()
                                 logging.info("already expired... responded to: " + msg.author.name)
                             else:
@@ -211,7 +211,7 @@ while True:
                                 con.close()
                                 msg.submission.mod.flair(text='Expired', css_class='expired')
                                 logging.info("flairing... responded to: " + msg.author.name)
-                                myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+"  \nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
+                                myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+".\n\nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
                                 msg.mark_read()
                         elif expired and usertest:
                           msg.report('possible bot abuse')
