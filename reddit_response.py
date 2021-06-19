@@ -228,6 +228,14 @@ If you wish to give away your extra game keys, please post them under this comme
 Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
 ^(May not be available on all offers.  We do not receive compensation for this code.)"""
 
+### oculiumvr.com Info
+    if re.search("oculiumvr.com", url) is not None:
+      reply_reason = "2Game Coupon"
+      reply_text = """
+**Notice**  
+OculiumVR sells game keys that are redeemable on the Oculus Store.  OculiumVR is based in Australia and charges in AUD, so outside purchases may incur a conversion fee.
+"""
+
 ### allyouplay coupon Info
     if re.search("allyouplay.com", url) is not None:
       reply_reason = "allyouplay Coupon"
@@ -239,9 +247,8 @@ Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.
 ### Voidu coupon Info
     if re.search("voidu.com", url) is not None:
       reply_reason = "Voidu Coupon"
+#**Notice:** Payment is only possible in euros. Purchases with other currencies are still possible, but currency conversion fees will apply. As such, listed prices are only a guide unless paying in euros.
       reply_text = """
-**Notice:** Payment is only possible in euros. Purchases with other currencies are still possible, but currency conversion fees will apply. As such, listed prices are only a guide unless paying in euros.
-
 **Coupon**  
 Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
 ^(May not be available on all offers.  We do not receive compensation for this code.)"""
