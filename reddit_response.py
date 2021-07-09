@@ -91,6 +91,9 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
 
 ### Find all URLS inside a .self post
     urls = []
+    if submission.author.name == "gamedealsmod":
+      logging.info("gamedealsmod posted, skipping: " + submission.title)
+      return
     if submission.is_self:
         urls = re.findall('(?:(?:https?):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', submission.selftext)
         if len(urls) == 0:
@@ -182,7 +185,7 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
 If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
 
 ### Bundle Giveaways for Humble
-    if re.search("(humblebundle\.com(?!(/store|/monthly)))", url) is not None:
+    if re.search("(humblebundle\.com(?!(/g/|/store|/monthly)))", url) is not None:
       if re.search("indiegala.com.+giveaway", url) is None and re.search("freebies.indiegala.com", url) is None:
         reply_reason = "Bundle Giveaway"
         reply_text = """
@@ -219,6 +222,14 @@ If you wish to give away your extra game keys, please post them under this comme
         #reply_text = "^(automatic deal expiry set for " + datetime.datetime.fromtimestamp(int(expdate)).strftime('%Y-%m-%d %H:%M:%S') + " UTC)\n\n"
       except:
         pass
+
+### GamersGate coupon Info
+    if re.search("gamersgate.com", url) is not None:
+      reply_reason = "GamersGate Coupon"
+      reply_text = """
+**Coupon**  
+Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
+^(May not be available on all offers.  We do not receive compensation for this code.)"""
 
 ### 2game coupon Info
     if re.search("2game.com", url) is not None:
