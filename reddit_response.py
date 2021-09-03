@@ -77,6 +77,12 @@ def logID(postid):
 
 
 def respond(submission):
+    con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
+    cursorObj = con.cursor()
+    cursorObj.execute('DELETE from schedules WHERE postid = "' + submission.id + '"' )
+    cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,(submission.created_utc + 2592000)) )
+    con.commit()
+    con.close()
     post_footer = True
     footer = """
 
@@ -164,6 +170,7 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
        try:
          con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
          cursorObj = con.cursor()
+         cursorObj.execute('DELETE from schedules WHERE postid = "' + submission.id + '"' )
          cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,getexp) )
          con.commit()
          con.close()
@@ -229,6 +236,7 @@ If you wish to give away your extra game keys, please post them under this comme
       reply_text = """
 **Coupon**  
 Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
+^(Coupon applicable to: Europe, North America, Japan, South Korea and Australia)  
 ^(May not be available on all offers.  We do not receive compensation for this code.)"""
 
 ### 2game coupon Info

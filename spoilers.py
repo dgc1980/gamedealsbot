@@ -40,6 +40,7 @@ f.close()
 logging.info("scanning spoiler...")
 
 def runspoiler(postlimit):
+ try:
   for submission in subreddit.new(limit=postlimit):
     if submission.link_flair_text is not None:
       flair = submission.link_flair_text.lower()
@@ -56,7 +57,7 @@ def runspoiler(postlimit):
     allowsend =0
 
     if len(submission.all_awardings) > 0 :
-      print("has awards")
+      #print("has awards")
       if submission.id in open(apppath+'awards.txt').read():
         continue
 
@@ -137,7 +138,14 @@ def runspoiler(postlimit):
         cursorObj.execute('DELETE FROM flairs WHERE postid = "'+submission.id+'"')
         submission.mod.flair(text=rows[0][2], css_class='')
       con.close()
+ except (prawcore.exceptions.RequestException, prawcore.exceptions.ResponseException):
+        logging.info("Error connecting to reddit servers. Retrying in 1 minute...")
+        time.sleep(60)
 
+ except praw.exceptions.APIException:
+        logging.info("Rate limited, waiting 5 seconds")
+        time.sleep(5)
+ 
 
 
 schedule.every(1).minutes.do(runspoiler, 50)
@@ -146,6 +154,9 @@ schedule.every(1).hours.do(runspoiler, 200)
 runspoiler(10)
 
 while 1:
+#  try:
     schedule.run_pending()
     time.sleep(1)
 
+#  except:
+#    time.sleep(10)

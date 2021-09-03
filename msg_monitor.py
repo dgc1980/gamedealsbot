@@ -47,6 +47,8 @@ def checkuser(username):
     test = u.comment_karma
   except:
     return True
+  if u == "JoyBuggy":
+    return False
   if int(u.created_utc) > int(time.time()) - (86400 * Config.NewUserDays):
     return True
 
@@ -170,6 +172,7 @@ while True:
                             tm = datetime.datetime.strptime(match1.group(1), "%H:%M %d/%m/%Y")
                             tm2 = time.mktime(tm.timetuple())
                             cursorObj = con.cursor()
+                            cursorObj.execute('DELETE from schedules WHERE postid = :' + msg.submission.id + '"')
                             cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm2) )
                             con.commit()
                             con.close()
@@ -184,6 +187,7 @@ while True:
                             tm2 = time.mktime( tm.timetuple() )
                             con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
                             cursorObj = con.cursor()
+                            cursorObj.execute('DELETE from schedules WHERE postid = :' + msg.submission.id + '"')
                             cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(msg.submission.id,tm2) )
                             con.commit()
                             con.close()

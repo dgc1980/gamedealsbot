@@ -45,7 +45,7 @@ def runjob():
   tm = str(int(time.time()))
   con = sqlite3.connect(apppath+'gamedealsbot.db')
   cursorObj = con.cursor()
-  cursorObj.execute('SELECT * FROM schedules WHERE schedtime <= ' + tm + ';')
+  cursorObj.execute('SELECT * FROM schedules WHERE schedtime <= ' + tm + ' LIMIT 0,50;')
   rows = cursorObj.fetchall()
   if len(rows) is not 0:
     for row in rows:
@@ -53,7 +53,13 @@ def runjob():
         logging.info("running schedule on https://reddit.com/" + row[1])
         cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
         con.commit()
-        reddit.submission(row[1]).mod.spoiler()
+        submission = reddit.submission(row[1])
+        submission.mod.spoiler()
+        cursorObj = con.cursor()
+        flairtime = str( int(time.time()))
+        cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
+        con.commit()
+        submission.mod.flair(text='Expired', css_class='expired')
   con.close();
 
 
