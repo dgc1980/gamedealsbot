@@ -143,7 +143,7 @@ while True:
 
                         if oops:
                           if not msg.submission.spoiler:
-                              myreply = msg.reply("this deal is already available, we use `spoilers` and `flairs` to distinguish a deal has been marked expired").mod.distinguish(how='yes')
+                              myreply = msg.reply("This deal has already been marked expired.  We use both spoilers and a unique flair to distinguish deals that are expired.").mod.distinguish(how='yes')
                               msg.mark_read()
                               logging.info("already available... responded to: " + msg.author.name)
                           else:
