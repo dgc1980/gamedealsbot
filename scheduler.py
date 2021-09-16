@@ -45,21 +45,26 @@ def runjob():
   tm = str(int(time.time()))
   con = sqlite3.connect(apppath+'gamedealsbot.db')
   cursorObj = con.cursor()
-  cursorObj.execute('SELECT * FROM schedules WHERE schedtime <= ' + tm + ' LIMIT 0,50;')
+  cursorObj.execute('SELECT * FROM schedules WHERE schedtime <= ' + tm + ' ORDER BY schedtime DESC LIMIT 0,50;')
   rows = cursorObj.fetchall()
   if len(rows) is not 0:
     for row in rows:
-      if reddit.submission(row[1]).removed_by_category is not "None":
+      submission = reddit.submission(row[1])
+      #logging.info( submission.removed_by_category )
+      if submission.removed_by_category is None and submission.author is not None and submission.banned_by is None:
         logging.info("running schedule on https://reddit.com/" + row[1])
-        cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
-        con.commit()
-        submission = reddit.submission(row[1])
         submission.mod.spoiler()
-        cursorObj = con.cursor()
         flairtime = str( int(time.time()))
+        cursorObj = con.cursor()
+        cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
         cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
         con.commit()
         submission.mod.flair(text='Expired', css_class='expired')
+      else:
+        cursorObj = con.cursor()
+        cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
+        con.commit()
+        logging.info("skipping https://reddit.com/" + row[1])
   con.close();
 
 
