@@ -11,6 +11,7 @@ import Config
 import logging
 import re
 import dateparser
+import yaml
 
 os.environ['TZ'] = 'UTC'
 
@@ -22,7 +23,7 @@ reddit = praw.Reddit(client_id=Config.cid,
                      username=Config.user)
 subreddit = reddit.subreddit(Config.subreddit)
 
-apppath='/home/reddit/gamedealsbot/'
+apppath='./'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -182,207 +183,24 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
        except:
          pass
 
-### Bundle Giveaways
-    if re.search("(fanatical\.com/(.*)bundle|(?!freebies\.)indiegala\.com(?!(/store|/crackerjack)))", url) is not None:
-      if re.search("indiegala.com.+giveaway", url) is None and re.search("freebies.indiegala.com", url) is None:
-        reply_reason = "Bundle Giveaway"
-        reply_text = """
-**Giveaways**
 
-If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
+    try:
+      rules = yaml.safe_load_all( reddit.subreddit('gamedeals').wiki['gamedealsbot-storenotes'].content_md )
+    except:
+      rules = working_rules
+    working_rules = rules
 
-### Bundle Giveaways for Humble
-    if re.search("(humblebundle\.com(?!(/g/|/store|/monthly)))", url) is not None:
-      if re.search("indiegala.com.+giveaway", url) is None and re.search("freebies.indiegala.com", url) is None:
-        reply_reason = "Bundle Giveaway"
-        reply_text = """
-**Warning**
+    for rule in rules:
+      if rule is not None:
+        if re.search( rule['match'] , url ):
 
-With current reports of Humble Bundle account access being restricted, we would like to remind people that the supplied keys are for personal use only as stated on the bundle pages.  There may be a risk of account suspensions on Humble Bundle for trading/gifting.  
-[^(more information)](https://redd.it/hwobv8)
-
-**Giveaways**
-
-If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
-
-        reply_text = """
-**Giveaways**
-
-If you wish to give away your extra game keys, please post them under this comment only.  Do not ask for handouts or trades."""
-
-### chrono.gg auto expire
-    if re.search("chrono.gg", url) is not None:
-      try:
-        r = requests.get( url )
-        match1 = re.search('"endsAt":"([\w\-\:\.]+)"', r.text)
-        enddate= dateparser.parse( match1.group(1)  , settings={'PREFER_DATES_FROM': 'future', 'TO_TIMEZONE': 'UTC' } )
-        expdate = time.mktime( enddate.timetuple() )
-        con = sqlite3.connect(apppath+'gamedealsbot.db', timeout=20)
-        cursorObj = con.cursor()
-        cursorObj.execute('INSERT into schedules(postid, schedtime) values(?,?)',(submission.id,expdate) )
-        con.commit()
-        con.close
-        logging.info("[Chrono] | " + submission.title + " | https://redd.it/" + submission.id )
-        logging.info("setting up schedule: bot for: " + submission.id)
-        reply_reason = "chrono.gg"
-        post_footer = False
-        #reply_text = "^(automatic deal expiry set for " + datetime.datetime.fromtimestamp(int(expdate)).strftime('%Y-%m-%d %H:%M:%S') + " UTC)\n\n"
-      except:
-        pass
-
-### GamersGate coupon Info
-    if re.search("gamersgate.com", url) is not None:
-      reply_reason = "GamersGate Coupon"
-      reply_text = """
-**Coupon**  
-Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
-^(Coupon applicable to: Europe, North America, Japan, South Korea and Australia)  
-^(May not be available on all offers.  We do not receive compensation for this code.)"""
-
-### 2game coupon Info
-    if re.search("2game.com", url) is not None:
-      reply_reason = "2Game Coupon"
-      reply_text = """
-**Coupon**  
-Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
-^(May not be available on all offers.  We do not receive compensation for this code.)"""
-
-### oculiumvr.com Info
-    if re.search("oculiumvr.com", url) is not None:
-      reply_reason = "2Game Coupon"
-      reply_text = """
-**Notice**  
-OculiumVR sells game keys that are redeemable on the Oculus Store.  OculiumVR is based in Australia and charges in AUD, so outside purchases may incur a conversion fee.
-"""
-
-### allyouplay coupon Info
-    if re.search("allyouplay.com", url) is not None:
-      reply_reason = "allyouplay Coupon"
-      reply_text = """
-**Coupon**  
-Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
-^(May not be available on all offers.  We do not receive compensation for this code.)"""
-
-### Voidu coupon Info
-    if re.search("voidu.com", url) is not None:
-      reply_reason = "Voidu Coupon"
-#**Notice:** Payment is only possible in euros. Purchases with other currencies are still possible, but currency conversion fees will apply. As such, listed prices are only a guide unless paying in euros.
-      reply_text = """
-**Coupon**  
-Use the site-wide coupon `RGAMEDEALS` for an additional 10% off.  
-^(May not be available on all offers.  We do not receive compensation for this code.)"""
-
-
-
-### GOG.com Info
-    if re.search("gog.com", url) is not None:
-      reply_reason = "GOG.com Info"
-      reply_text = """
-GOG.com sells games that are completely DRM-free. This means that there is nothing preventing or limiting you from installing and playing the game. 
-
-**As such, games from GOG never come with Steam keys.**
-
-[More Information](https://support.gog.com/hc/en-us/articles/360001947574-FAQ-What-is-GOG-COM-?product=gog)
-
-This message is posted automatically to inform new users about what this service provides in order to answer some commonly asked questions."""
-
-### Itch.io
-#    if re.search("itch.io", url) is not None:
-#      reply_reason = "Itch.io Info"
-#      reply_text = """
-#Games from EA Origin do not come with Steam keys, unless explicitly stated. Origin games will require the download and use of the Origin client. If you wish to add a game shortcut to your Steam library, you can do so by adding it as a *Non-Steam Game* from the *Games* menu of the Steam client.
-#
-#[More Information](http://www.origin.com/us/faq)"""
-#
-### Origin
-    if re.search("origin.com", url) is not None:
-      reply_reason = "Origin Info"
-      reply_text = """
-Games from EA Origin do not come with Steam keys, unless explicitly stated. Origin games will require the download and use of the Origin client. If you wish to add a game shortcut to your Steam library, you can do so by adding it as a *Non-Steam Game* from the *Games* menu of the Steam client.
-
-[More Information](http://www.origin.com/us/faq)"""
-
-### Groupees Preorders
-
-    if re.search("groupees.com", url) is not None:
-      if re.search("(pre-?order|pre-?purchase|preorder|pre order|presale|pre sale|pre-sale)", submission.title.lower() ) is not None:
-        reply_reason = "Groupees Preorder"
-        reply_text = """
-About Groupees' pre-orders:  
-
-This is a blind pre-purchase of the full bundle at a reduced price. The games will be revealed tomorrow at normal price"""
-
-
-### IndieGala Giveaway Explanation
-    if re.search("indiegala\.com.+giveaway", url) is not None:
-      reply_reason = "IndieGala giveaways"
-      reply_text = "IndieGala giveaways are usually located towards the bottom of the page.  You may need to dismiss a banner image or confirm a captcha to claim a key.\n"
-
-### IndieGala freebies Explanation
-    if re.search("freebies\.indiegala\.com", url) is not None:
-      reply_reason = "IndieGala freebies"
-      reply_text = "IndieGala freebies are usually DRM-free downloads.  In these cases no Steam key will be provided."
-
-### Fireflower Games
-    if re.search("fireflowergames\.com", url) is not None:
-      reply_reason = "Fireflower Games"
-      reply_text = """
-FireFlower Games sells games that are completely DRM-free. This means that there is nothing preventing or limiting you from installing and playing the game.
-
-**As such, games from FireFlower Games never come with Steam keys.**
-
-[More Information](https://fireflowergames.com/faq)
-
-This message is posted automatically to answer some commonly asked questions about what this service provides"""
-
-### Amazon US Charities
-    if re.search("(amazon\.com\/(.*\/)?dp|amazon\.com\/(.*\/)?gp\/product|amazon\.com\/(.*\/)?exec\/obidos\/ASIN|amzn\.com)\/(\w{10})", url) is not None:
-      match1 = re.search("(amazon\.com\/(.*\/)?dp|amazon\.com\/(.*\/)?gp\/product|amazon\.com\/(.*\/)?exec\/obidos\/ASIN|amzn\.com)\/(\w{10})", url)
-      amzn = match1.group(5)
-      reply_reason = "Amazon US Charities"
-      reply_text = """
-Charity links:
-
-* [Child's Play](https://smile.amazon.com/dp/"""+amzn+"""?tag=childsplaycha-20)
-* [Electronic Frontier Foundation](https://smile.amazon.com/dp/"""+amzn+"""?tag=electronicfro-20)
-* [Able Gamers](https://smile.amazon.com/dp/"""+amzn+"""?tag=ablegamers-20)
-* [Mercy Corps](https://smile.amazon.com/dp/"""+amzn+"""?tag=mercycorps-20)"""
-
-### Amazon US Charities NODE
-    if re.search("amazon\.com\/.*node=(\d+)", url) is not None:
-      match1 = re.search("(amazon\.com\/(.*\/)?dp|amazon\.com\/(.*\/)?gp\/product|amazon\.com\/(.*\/)?exec\/obidos\/ASIN|amzn\.com)\/(\w{10})", url)
-      amzn = match1.group(1)
-      reply_reason = "Amazon US Charities"
-      reply_text = """
-Charity links:
-
-* [Child's Play](https://smile.amazon.com/b/?node="""+amzn+"""&tag=childsplaycha-20)
-* [Electronic Frontier Foundation](https://smile.amazon.com/b/?node="""+amzn+"""&tag=electronicfro-20)
-* [Able Gamers](https://smile.amazon.com/b/?node="""+amzn+"""&tag=ablegamers-20)
-* [Mercy Corps](https://smile.amazon.com/b/?node="""+amzn+"""&tag=mercycorps-20)"""
-
-
-### Amazon UK Charities
-    if re.search("(amazon\.co\.uk\/(.*\/)?dp|amazon\.co\.uk\/(.*\/)?gp\/product|amazon\.co\.uk\/(.*\/)?exec\/obidos\/ASIN|amzn\.co\.uk)\/(\w{10})", url) is not None:
-      match1 = re.search("(amazon\.co\.uk\/(.*\/)?dp|amazon\.co\.uk\/(.*\/)?gp\/product|amazon\.co\.uk\/(.*\/)?exec\/obidos\/ASIN|amzn\.co\.uk)\/(\w{10})", url)
-      amzn = match1.group(5)
-      reply_reason = "Amazon UK Charities"
-      reply_text = """
-Charity links:
-
-* [Centre Point](https://www.amazon.co.uk/dp/"""+amzn+"""?tag=centrepoint01-21)"""
-
-### Amazon UK Charities NODE
-    if re.search("amazon\.co\.uk\/.*node=(\d+)", url) is not None:
-      match1 = re.search("amazon\.co\.uk\/.*node=(\d+)", url)
-      amzn = match1.group(1)
-      reply_reason = "Amazon UK Charities"
-      reply_text = """
-Charity links:
-
-* [Centre Point](https://www.amazon.co.uk/dp/?node="""+amzn+"""&tag=centrepoint01-21)"""
-
-
+          if "disabled" not in rule or rule['disabled'] == False:
+            reply_reason = rule['reply_reason']
+            reply_text = rule['reply']
+            if "match-group" in rule:
+               search1 = re.search( rule['match'] , url)
+               match1 = search1.group(rule['match-group'])
+               reply_text.replace('{{match}}', match1)
 
     if post_footer:
       if reply_text is not "":
@@ -396,9 +214,11 @@ Charity links:
 
 
 
-#submission = reddit.submission("l2na5l")
+#submission = reddit.submission("qiixoa")
+#submission = reddit.submission("qijjlf")
+#submission = reddit.submission("qijsq0")
 #respond( submission )
-
+#exit()
 
 
 

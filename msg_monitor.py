@@ -22,7 +22,7 @@ reddit = praw.Reddit(client_id=Config.cid,
                      user_agent=Config.agent,
                      username=Config.user)
 
-apppath='/home/reddit/gamedealsbot/'
+apppath='/bot/'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -143,7 +143,7 @@ while True:
 
                         if oops:
                           if not msg.submission.spoiler:
-                              myreply = msg.reply("This deal has already been marked expired.  We use both spoilers and a unique flair to distinguish deals that are expired.").mod.distinguish(how='yes')
+                              myreply = msg.reply("This deal is already marked available.  We use both spoilers and a unique flair to distinguish deals that are expired.").mod.distinguish(how='yes')
                               msg.mark_read()
                               logging.info("already available... responded to: " + msg.author.name)
                           else:

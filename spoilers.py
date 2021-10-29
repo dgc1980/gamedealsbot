@@ -17,7 +17,7 @@ reddit = praw.Reddit(client_id=Config.cid,
                      username=Config.user)
 subreddit = reddit.subreddit(Config.subreddit)
 
-apppath='/home/reddit/gamedealsbot/'
+apppath='/bot/'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',

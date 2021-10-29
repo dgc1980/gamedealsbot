@@ -20,7 +20,7 @@ reddit = praw.Reddit(client_id=Config.cid,
                      username=Config.user)
 subreddit = reddit.subreddit(Config.subreddit)
 
-apppath='/home/reddit/gamedealsbot/'
+apppath='/bot/'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -52,14 +52,16 @@ def runjob():
       submission = reddit.submission(row[1])
       #logging.info( submission.removed_by_category )
       if submission.removed_by_category is None and submission.author is not None and submission.banned_by is None:
-        logging.info("running schedule on https://reddit.com/" + row[1])
-        submission.mod.spoiler()
-        flairtime = str( int(time.time()))
-        cursorObj = con.cursor()
-        cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
-        cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
-        con.commit()
-        submission.mod.flair(text='Expired', css_class='expired')
+        if not submission.spoiler:
+             #if "expired" not in submission.link_flair_text.lower():
+            logging.info("running schedule on https://reddit.com/" + row[1])
+            submission.mod.spoiler()
+            flairtime = str( int(time.time()))
+            cursorObj = con.cursor()
+            cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
+            cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
+            con.commit()
+            submission.mod.flair(text='Expired', css_class='expired')
       else:
         cursorObj = con.cursor()
         cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
