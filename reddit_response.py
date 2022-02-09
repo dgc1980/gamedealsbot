@@ -15,7 +15,7 @@ import yaml
 
 os.environ['TZ'] = 'UTC'
 
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 reddit = praw.Reddit(client_id=Config.cid,
                      client_secret=Config.secret,
                      password=Config.password,
@@ -33,7 +33,7 @@ logging.basicConfig(level=logging.INFO,
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
@@ -93,15 +93,27 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
 ^(Note: To prevent abuse, requests are logged publicly.  Intentional abuse will likely result in a ban.)
 """
 
+    wikiconfig = yaml.safe_load( reddit.subreddit('gamedeals').wiki['gamedealsbot-config'].content_md )    
+
+    footer = wikiconfig['footer']
+    footer = footer.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
+    footer = footer.replace('{{available trigger}}',wikiconfig['available-trigger'])
+
+
     reply_reason = "Generic Post"
     reply_text = ""
 
 ### Find all URLS inside a .self post
     urls = []
+    if not submission.author:
+      logging.info("cannot find author?, skipping: " + submission.title)
+      return
     if submission.author.name == "gamedealsmod":
       logging.info("gamedealsmod posted, skipping: " + submission.title)
       return
+    selfpost = 0
     if submission.is_self:
+        selfpost = 1
         urls = re.findall('(?:(?:https?):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', submission.selftext)
         if len(urls) == 0:
             logging.info("NO LINK FOUND skipping: " + submission.title)
@@ -184,6 +196,8 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
          pass
 
 
+
+
     try:
       rules = yaml.safe_load_all( reddit.subreddit('gamedeals').wiki['gamedealsbot-storenotes'].content_md )
     except:
@@ -192,18 +206,23 @@ If this deal has been mistakenly closed or has been restocked, you can open it a
 
     for rule in rules:
       if rule is not None:
-        if re.search( rule['match'] , url ):
-
-          if "disabled" not in rule or rule['disabled'] == False:
-            reply_reason = rule['reply_reason']
-            reply_text = rule['reply']
-            if "match-group" in rule:
-               search1 = re.search( rule['match'] , url)
-               match1 = search1.group(rule['match-group'])
-               reply_text.replace('{{match}}', match1)
+        if "match" in rule:
+          if re.search( rule['match'] , url ):
+            if "dontmatch" not in rule or not re.search( rule['dontmatch'] , url ):
+              #print(rule)
+              if "disabled" not in rule or rule['disabled'] == False:
+                if "type" not in rule or ( "type" in rule and (rule['type'] == "link" and selfpost == 0) or (rule['type'] == "self" and selfpost == 1) or rule['type'] == "any") :
+                  if "reply_reason" in rule:
+                    reply_reason = rule['reply_reason']
+                  if "reply" in rule:
+                    reply_text = rule['reply']
+                  if "match-group" in rule:
+                    search1 = re.search( rule['match'] , url)
+                    match1 = search1.group(rule['match-group'])
+                    reply_text.replace('{{match}}', match1)
 
     if post_footer:
-      if reply_text is not "":
+      if reply_text != "":
         comment = submission.reply(reply_text+"\n\n*****\n\n"+footer)
       else:
         comment = submission.reply(footer)
@@ -264,7 +283,7 @@ while True:
                   cursorObj = con.cursor()
                   cursorObj.execute('SELECT * FROM weeklyposts WHERE username = "'+submission.author.name+'" AND currentweek = '+currentweek)
                   rows = cursorObj.fetchall()
-                  if len(rows) is 0:
+                  if len(rows) == 0:
                     cursorObj.execute('INSERT INTO weeklyposts(username, postcount, currentweek) VALUES("'+submission.author.name+'",1,'+currentweek+')')
                     con.commit()
                   else:
@@ -290,7 +309,7 @@ while True:
                   cursorObj = con.cursor()
                   cursorObj.execute('SELECT * FROM dailyposts WHERE username = "'+submission.author.name+'" AND currentday = '+currentday)
                   rows = cursorObj.fetchall()
-                  if len(rows) is 0:
+                  if len(rows) == 0:
                     cursorObj.execute('INSERT INTO dailyposts(username, postcount, currentday) VALUES("'+submission.author.name+'",1,'+currentday+')')
                     con.commit()
                   else:

@@ -8,12 +8,13 @@ import datetime
 import dateparser
 import os
 import re
+import yaml
 
 os.environ['TZ'] = 'UTC'
 
 
 import Config
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 responded = 0
 footer = ""
 reddit = praw.Reddit(client_id=Config.cid,
@@ -23,6 +24,7 @@ reddit = praw.Reddit(client_id=Config.cid,
                      username=Config.user)
 
 apppath='/bot/'
+apppath='./'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -90,6 +92,9 @@ while True:
             oops = False
             setsched = False
             responded = 0
+
+            wikiconfig = yaml.safe_load( reddit.subreddit('gamedeals').wiki['gamedealsbot-config'].content_md )
+
             # checks if bot has already replied (good if script has to restart)
             try:
                 if isinstance(msg, praw.models.Comment):
@@ -106,20 +111,23 @@ while True:
                 logging.info("error checking comment by: " + msg.author.name)
             try:
                 if responded == 0:
-                    if isinstance(msg, praw.models.Comment):
+                    if isinstance(msg, praw.models.Comment) and msg.author:
                         text = msg.body.lower()
                         u = msg.author
                         ismod = False
-                        if msg.author.name in ['dgc1980','SquareWheel','smeggysmeg','smeggysmeg','ronin19','treblah3','caninehere','caninehere','oxygENigma','wayward_wanderer']:
-                          ismod = True
+                        if msg.author:
+                          if msg.author.name in ['dgc1980','SquareWheel','smeggysmeg','smeggysmeg','ronin19','treblah3','caninehere','caninehere','oxygENigma','wayward_wanderer']:
+                            ismod = True
                         usertest = checkuser(msg.author.name)
                         try:
-                          if text.index(Config.expired_trigger.lower()) > -1:
+                          #print(wikiconfig)
+                          extrig = wikiconfig['expired-trigger']
+                          if text.index( extrig ) > -1:
                             expired = True
                         except ValueError:
                             pass
                         try:
-                          if text.index(Config.restore_trigger.lower()) > -1:
+                          if text.index(wikiconfig['available-trigger']) > -1:
                             oops = True
                         except ValueError:
                             pass
@@ -134,7 +142,7 @@ while True:
                         except ValueError:
                              pass
 
-                        if msg.submission.subreddit != Config.subreddit:
+                        if str(msg.submission.subreddit) not in Config.subreddit:
                           setsched = False
                           oops = False
                           expired = False
@@ -143,7 +151,13 @@ while True:
 
                         if oops:
                           if not msg.submission.spoiler:
-                              myreply = msg.reply("This deal is already marked available.  We use both spoilers and a unique flair to distinguish deals that are expired.").mod.distinguish(how='yes')
+                              alreadyavailablereply = wikiconfig['already-available']
+                              alreadyavailablereply = alreadyavailablereply.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
+                              alreadyavailablereply = alreadyavailablereply.replace('{{available trigger}}',wikiconfig['available-trigger'])
+                              alreadyavailablereply = alreadyavailablereply.replace('{{author}}', msg.author.name)
+
+                              myreply = msg.reply( alreadyavailablereply ).mod.distinguish(how='yes')
+
                               msg.mark_read()
                               logging.info("already available... responded to: " + msg.author.name)
                           else:
@@ -163,7 +177,14 @@ while True:
                                   pass
                                 msg.submission.mod.flair(text=rows[0][2], css_class='')
                               con.close()
-                              msg.reply("This deal has been marked available as requested by /u/"+msg.author.name+".").mod.distinguish(how='yes')
+
+                              availablereply = wikiconfig['available-reply']
+                              availablereply = availablereply.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
+                              availablereply = availablereply.replace('{{available trigger}}',wikiconfig['available-trigger'])
+                              availablereply = availablereply.replace('{{author}}', msg.author.name)
+
+                              myreply = msg.reply( availablereply ).mod.distinguish(how='yes')
+
                         elif setsched:
                           #try:
                           if re.search("(\d{1,2}:\d{2} \d{2}\/\d{2}\/\d{4})", text) is not None:
@@ -177,7 +198,13 @@ while True:
                             con.commit()
                             con.close()
                             logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm.strftime('%Y-%m-%d %H:%M:%S'))  )
-                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm.strftime('%Y-%m-%d %H:%M:%S')) + " UTC").mod.distinguish(how='yes')
+                            schedulereply = wikiconfig['schedule-message']
+                            schedulereply = schedulereply.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
+                            schedulereply = schedulereply.replace('{{available trigger}}',wikiconfig['available-trigger'])
+                            schedulereply = schedulereply.replace('{{author}}', msg.author.name)
+                            schedulereply = schedulereply.replace('{{time}}', str(tm.strftime('%Y-%m-%d %H:%M:%S'))   )
+
+                            myreply = msg.reply( schedulereply ).mod.distinguish(how='yes')
                             msg.mark_read()
                           else:
                             match1 = re.search("set expiry\ ([\w\:\ \-\+]+)", text)
@@ -192,14 +219,25 @@ while True:
                             con.commit()
                             con.close()
                             logging.info("setting up schedule: " + msg.author.name + "for https://redd.it/" + msg.submission.id + " at " + str(tm.strftime('%Y-%m-%d %H:%M:%S'))  )
-                            myreply = msg.reply("This deal has been scheduled to expire as requested by /u/"+msg.author.name+". at " + str(tm.strftime('%Y-%m-%d %H:%M:%S')) + " UTC").mod.distinguish(how='yes')
+                            schedulereply = wikiconfig['schedule-message']
+                            schedulereply = schedulereply.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
+                            schedulereply = schedulereply.replace('{{available trigger}}',wikiconfig['available-trigger'])
+                            schedulereply = schedulereply.replace('{{author}}', msg.author.name)
+                            schedulereply = schedulereply.replace('{{time}}', str(tm.strftime('%Y-%m-%d %H:%M:%S'))   )
+
+                            myreply = msg.reply( schedulereply ).mod.distinguish(how='yes')
                             msg.mark_read()
                           #except:
                           #  pass
                           msg.mark_read()
                         elif expired and not usertest:
                             if msg.submission.spoiler:
-                                myreply = msg.reply("This deal has already been marked expired.  We use both spoilers and a unique flair to distinguish deals that are expired.").mod.distinguish(how='yes')
+                                alreadyexpired = wikiconfig['already-expired-reply']
+                                alreadyexpired = alreadyexpired.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
+                                alreadyexpired = alreadyexpired.replace('{{available trigger}}',wikiconfig['available-trigger'])
+                                alreadyexpired = alreadyexpired.replace('{{author}}', msg.author.name)
+
+                                myreply = msg.reply(alreadyexpired).mod.distinguish(how='yes')
                                 msg.mark_read()
                                 logging.info("already expired... responded to: " + msg.author.name)
                             else:
@@ -215,7 +253,13 @@ while True:
                                 con.close()
                                 msg.submission.mod.flair(text='Expired', css_class='expired')
                                 logging.info("flairing... responded to: " + msg.author.name)
-                                myreply = msg.reply("This deal has been marked expired as requested by /u/"+msg.author.name+".\n\nIf this was a mistake, please reply with `"+Config.restore_trigger+"`.").mod.distinguish(how='yes')
+
+                                expiredmsg = wikiconfig['already-expired-reply']
+                                expiredmsg = expiredmsg.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
+                                expiredmsg = expiredmsg.replace('{{available trigger}}',wikiconfig['available-trigger'])
+                                expiredmsg = expiredmsg.replace('{{author}}', msg.author.name)
+
+                                myreply = msg.reply(expiredmsg).mod.distinguish(how='yes')
                                 msg.mark_read()
                         elif expired and usertest:
                           msg.report('possible bot abuse')

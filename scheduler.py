@@ -52,8 +52,9 @@ def runjob():
       submission = reddit.submission(row[1])
       #logging.info( submission.removed_by_category )
       if submission.removed_by_category is None and submission.author is not None and submission.banned_by is None:
+       if submission.link_flair_text is None or ("preorder" not in submission.link_flair_text.lower() and "pre-order" not in submission.link_flair_text.lower() and "preorder" not in submission.title.lower() and "pre-order" not in submission.title.lower()):
         if not submission.spoiler:
-             #if "expired" not in submission.link_flair_text.lower():
+               #if "expired" not in submission.link_flair_text.lower():
             logging.info("running schedule on https://reddit.com/" + row[1])
             submission.mod.spoiler()
             flairtime = str( int(time.time()))
@@ -62,6 +63,11 @@ def runjob():
             cursorObj.execute('INSERT INTO flairs(postid, flairtext, timeset) VALUES(?,?,?)', (submission.id,submission.link_flair_text,flairtime)  )
             con.commit()
             submission.mod.flair(text='Expired', css_class='expired')
+       else:
+        cursorObj = con.cursor()
+        cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
+        con.commit()
+        logging.info("skipping https://reddit.com/" + row[1])
       else:
         cursorObj = con.cursor()
         cursorObj.execute('DELETE FROM schedules WHERE postid = "'+ row[1]+'"')
@@ -78,5 +84,5 @@ schedule.every(1).minutes.do(runjob)
 runjob()
 while 1:
     schedule.run_pending()
-    time.sleep(1)
+    time.sleep(30)
 
