@@ -254,7 +254,7 @@ while True:
                                 msg.submission.mod.flair(text='Expired', css_class='expired')
                                 logging.info("flairing... responded to: " + msg.author.name)
 
-                                expiredmsg = wikiconfig['already-expired-reply']
+                                expiredmsg = wikiconfig['expired-reply']
                                 expiredmsg = expiredmsg.replace('{{expired trigger}}',wikiconfig['expired-trigger'])
                                 expiredmsg = expiredmsg.replace('{{available trigger}}',wikiconfig['available-trigger'])
                                 expiredmsg = expiredmsg.replace('{{author}}', msg.author.name)
